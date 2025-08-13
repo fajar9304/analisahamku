@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="en" class=""> 
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Analisis Saham v20.4 (Hybrid Layout)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f3f4f6;
+            color: #111827;
+        }
+        .dark body {
+            background-color: #111827;
+            color: #d1d5db;
+        }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #e5e7eb; }
+        ::-webkit-scrollbar-thumb { background: #9ca3af; border-radius: 10px; }
+        .dark ::-webkit-scrollbar-track { background: #1f2937; }
+        .dark ::-webkit-scrollbar-thumb { background: #4b5563; }
+        
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loader { border: 4px solid #d1d5db; border-left-color: #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        .dark .loader { border-color: #4b5563; border-left-color: #3b82f6; }
+        
+        .card { 
+            background-color: white; 
+            color: #111827;
+            border-radius: 1.5rem; 
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05); 
+        }
+        .dark .card { 
+            background-color: #1f2937;
+            color: #d1d5db;
+        }
+        
+        .tab-button { color: #6b7280; border-bottom: 2px solid transparent; }
+        .tab-button.active { color: #3b82f6; border-bottom-color: #3b82f6; font-weight: 700; }
+        .dark .tab-button { color: #9ca3af; }
+        .dark .tab-button.active { color: #60a5fa; border-bottom-color: #60a5fa; }
+        
+        .bottom-nav-btn { color: #9ca3af; }
+        .bottom-nav-btn.active { color: #3b82f6; font-weight: 600; }
+        .dark .bottom-nav-btn { color: #6b7280; }
+        .dark .bottom-nav-btn.active { color: #60a5fa; }
+        
+        .toggle-checkbox {
+            transition: background-color .2s ease-in-out;
+        }
+        .toggle-checkbox::before {
+            content: '';
+            position: absolute;
+            width: 1.25rem;
+            height: 1.25rem;
+            border-radius: 9999px;
+            background-color: white;
+            top: 0.125rem;
+            left: 0.125rem;
+            transition: transform .2s ease-in-out;
+        }
+        .toggle-checkbox:checked { background-color: #3b82f6; }
+        .toggle-checkbox:checked::before { transform: translateX(1.25rem); }
+
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+          -webkit-appearance: none; 
+          margin: 0; 
+        }
+        input[type=number] {
+          -moz-appearance: textfield;
+        }
+        #image-upload-area {
+            border: 2px dashed #d1d5db;
+        }
+        .dark #image-upload-area {
+            border-color: #4b5563;
+        }
+        
+        .dark .custom-select, .dark .price-input, .dark .investor-search-input {
+            color: #111827;
+            background-color: #ffffff;
+        }
+
+    </style>
+</head>
+<body class="transition-colors duration-300">
+
+    
+<div id="login-page" class="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-blue-600 to-indigo-700">
+        <div class="w-full max-w-sm">
+            <div class="bg-white/20 backdrop-blur-lg border border-white/30 rounded-3xl shadow-2xl p-8">
+                <h1 class="text-3xl font-bold text-center text-white mb-2">Selamat Datang</h1>
+                <p class="text-center text-blue-200 mb-8">Masuk ke Akun Anda</p>
+                
+                <div class="mb-4">
+                    <label for="username" class="block text-blue-100 text-sm font-bold mb-2">Nama Pengguna</label>
+                    <input id="username" type="text" placeholder="Masukkan nama pengguna Anda" class="w-full bg-white/20 border border-white/30 rounded-full py-3 px-5 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-white">
+                </div>
+                <div class="mb-6">
+                    <label for="token" class="block text-blue-100 text-sm font-bold mb-2">Token Akses</label>
+                    <input id="token" type="text" placeholder="Masukkan token Anda" maxlength="6" class="w-full bg-white/20 border border-white/30 rounded-full py-3 px-5 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-white tracking-widest">
+                </div>
+                <button id="login-button" class="w-full bg-white hover:bg-gray-200 text-blue-600 font-bold py-3 px-4 rounded-full transition-colors duration-300 text-lg">Masuk</button>
+                <p id="login-error" class="text-yellow-300 text-center text-sm mt-4 hidden">Nama Pengguna harus diisi atau Token tidak valid.</p>
+            </div>
+            <p class="text-center text-blue-200 text-xs mt-6">
+                Untuk mendapatkan token akses, silakan hubungi administrator.
+            </p>
+        </div>
+    </div>
+
+    
+<div id="app-page" class="hidden">
+        <div class="min-h-screen w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 pb-24 sm:pb-8">
+            <header class="mb-8 p-6 rounded-3xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg">
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div>
+                        <h1 class="text-3xl font-extrabold text-center sm:text-left">Dashboard</h1>
+                        <p class="mt-1 text-blue-200 text-center sm:text-left">Selamat datang kembali!</p>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="flex items-center">
+                            <ion-icon name="sunny-outline" class="text-xl text-yellow-300"></ion-icon>
+                            <div class="relative inline-block w-12 mx-2 align-middle select-none">
+                                <input type="checkbox" name="dark-mode-toggle" id="dark-mode-toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-2 appearance-none cursor-pointer transition-transform duration-200 ease-in-out"/>
+                                <label for="dark-mode-toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 dark:bg-gray-600 cursor-pointer"></label>
+                            </div>
+                            <ion-icon name="moon-outline" class="text-xl text-blue-200"></ion-icon>
+                        </div>
+                        <button id="logout-button" class="bg-white/20 hover:bg-white/30 text-white font-bold py-2 px-5 rounded-full transition-colors duration-300">Keluar</button>
+                    </div>
+                </div>
+            </header>
+
+            
+<nav class="hidden sm:flex flex-wrap justify-center border-b border-gray-200 dark:border-gray-700 mb-8">
+                <button data-tab="screener" class="tab-button py-3 px-4 sm:px-6 text-sm sm:text-lg font-semibold active">Screener</button>
+                <button data-tab="discountHunter" class="tab-button py-3 px-4 sm:px-6 text-sm sm:text-lg font-semibold">Pemburu Diskon</button>
+                <button data-tab="investor" class="tab-button py-3 px-4 sm:px-6 text-sm sm:text-lg font-semibold">Gaya Investor</button>
+                <button data-tab="analysis" class="tab-button py-3 px-4 sm:px-6 text-sm sm:text-lg font-semibold">Analisis</button>
+                <button data-tab="education" class="tab-button py-3 px-4 sm:px-6 text-sm sm:text-lg font-semibold">Pusat Edukasi</button>
+            </nav>
+
+            
+<main>
+                <div id="screener-tab-content">
+                    <div class="max-w-5xl mx-auto">
+                        <div class="card p-6 mb-8">
+                            <h2 class="text-xl font-bold text-center mb-6">Peringkat Saham Potensial</h2>
+                            <div class="flex flex-col sm:flex-row sm:flex-wrap justify-center items-center gap-4">
+                                <select id="sector-select" class="w-full sm:w-auto custom-select bg-gray-100 border border-gray-300 text-sm rounded-full focus:ring-blue-500 focus:border-blue-500 block p-3">
+                                    <option selected value="semua">Semua Sektor</option>
+                                    <option value="Energi">Energi</option>
+                                    <option value="Keuangan">Keuangan</option>
+                                    <option value="Teknologi">Teknologi</option>
+                                    <option value="Kesehatan">Kesehatan</option>
+                                    <option value="Barang Konsumen Primer">Barang Konsumen Primer</option>
+                                </select>
+                                <select id="risk-profile-select" class="w-full sm:w-auto custom-select bg-gray-100 border border-gray-300 text-sm rounded-full focus:ring-blue-500 focus:border-blue-500 block p-3">
+                                    <option selected value="semua">Semua Profil Risiko</option>
+                                    <option value="stabil">Aman & Stabil</option>
+                                    <option value="pertumbuhan">Pertumbuhan Cepat</option>
+                                </select>
+                                <div class="w-full sm:w-auto flex items-center justify-center">
+                                    <label for="multibagger-toggle" class="font-semibold mr-3">Multibagger</label>
+                                    <div class="relative inline-block w-12 align-middle select-none">
+                                        <input type="checkbox" name="multibagger-toggle" id="multibagger-toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-2 appearance-none cursor-pointer"/>
+                                        <label for="multibagger-toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 dark:bg-gray-600 cursor-pointer"></label>
+                                    </div>
+                                </div>
+                                <button id="screener-button" class="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-indigo-600 hover:opacity-90 text-white font-bold py-3 px-8 rounded-full transition-opacity duration-300 text-lg">Cari</button>
+                            </div>
+                        </div>
+                        <div id="screener-results-container" class="space-y-4"></div>
+                    </div>
+                </div>
+
+                <div id="discount-hunter-tab-content" class="hidden">
+                    <div class="max-w-5xl mx-auto">
+                        <div class="card p-6 mb-8">
+                            <h2 class="text-xl font-bold text-center mb-4">Pemburu Diskon</h2>
+                            <div class="flex flex-col sm:flex-row sm:flex-wrap justify-center items-center gap-4">
+                                 <select id="discount-sector-select" class="w-full sm:w-auto custom-select bg-gray-100 border border-gray-300 text-sm rounded-full focus:ring-blue-500 focus:border-blue-500 block p-3">
+                                    <option selected value="semua">Semua Sektor</option>
+                                    <option value="Energi">Energi</option>
+                                    <option value="Keuangan">Keuangan</option>
+                                    <option value="Teknologi">Teknologi</option>
+                                    <option value="Kesehatan">Kesehatan</option>
+                                    <option value="Barang Konsumen Primer">Barang Konsumen Primer</option>
+                                </select>
+                                <button id="find-discount-button" class="w-full sm:w-auto bg-gradient-to-r from-cyan-500 to-sky-600 hover:opacity-90 text-white font-bold py-3 px-8 rounded-full transition-opacity duration-300 text-lg">Cari Peluang</button>
+                            </div>
+                        </div>
+                        <div id="discount-hunter-results-container" class="space-y-4"></div>
+                        
+                        <div class="mt-12">
+                            <h2 class="text-2xl font-bold text-center mb-4">Potensi dari Saham IPO Mendatang</h2>
+                            <p class="text-center text-gray-500 dark:text-gray-400 mb-6 max-w-3xl mx-auto">Saham yang baru melantai di bursa (IPO) seringkali menarik perhatian karena berpotensi memberikan keuntungan dalam waktu singkat. Berikut adalah beberapa perusahaan yang dijadwalkan atau baru saja melantai di bursa.</p>
+                            <div class="card overflow-hidden">
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-sm text-left">
+                                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-800 dark:text-gray-400">
+                                            <tr>
+                                                <th scope="col" class="px-6 py-3">Perusahaan</th>
+                                                <th scope="col" class="px-6 py-3">Harga IPO</th>
+                                                <th scope="col" class="px-6 py-3 hidden sm:table-cell">Tgl Penawaran</th>
+                                                <th scope="col" class="px-6 py-3 hidden sm:table-cell">Tgl Listing</th>
+                                                <th scope="col" class="px-6 py-3">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="border-b dark:border-gray-700">
+                                                <td class="px-6 py-4">
+                                                    <div class="font-bold">PT Energi Hijau Abadi</div>
+                                                    <div class="text-xs text-gray-500 dark:text-gray-400">HEJO</div>
+                                                </td>
+                                                <td class="px-6 py-4 font-semibold">Rp 300</td>
+                                                <td class="px-6 py-4 hidden sm:table-cell">10-15 Sep 2025</td>
+                                                <td class="px-6 py-4 hidden sm:table-cell">22 Sep 2025</td>
+                                                <td class="px-6 py-4"><span class="px-2 py-1 text-xs font-semibold leading-tight text-yellow-700 bg-yellow-100 rounded-full dark:bg-yellow-700 dark:text-yellow-100">Segera Hadir</span></td>
+                                            </tr>
+                                            <tr class="border-b dark:border-gray-700">
+                                                <td class="px-6 py-4">
+                                                    <div class="font-bold">PT Nusantara Digital Investama</div>
+                                                    <div class="text-xs text-gray-500 dark:text-gray-400">DIGI</div>
+                                                </td>
+                                                <td class="px-6 py-4 font-semibold">Rp 250</td>
+                                                <td class="px-6 py-4 hidden sm:table-cell">25-29 Agt 2025</td>
+                                                <td class="px-6 py-4 hidden sm:table-cell">05 Sep 2025</td>
+                                                <td class="px-6 py-4"><span class="px-2 py-1 text-xs font-semibold leading-tight text-blue-700 bg-blue-100 rounded-full dark:bg-blue-700 dark:text-blue-100">Masa Penawaran</span></td>
+                                            </tr>
+                                            <tr class="border-b dark:border-gray-700">
+                                                <td class="px-6 py-4">
+                                                    <div class="font-bold">PT Merry Riana Edukasi</div>
+                                                    <div class="text-xs text-gray-500 dark:text-gray-400">MERI</div>
+                                                </td>
+                                                <td class="px-6 py-4 font-semibold">Rp 128</td>
+                                                <td class="px-6 py-4 hidden sm:table-cell">02-08 Jul 2025</td>
+                                                <td class="px-6 py-4 hidden sm:table-cell">10 Jul 2025</td>
+                                                <td class="px-6 py-4"><span class="px-2 py-1 text-xs font-semibold leading-tight text-green-700 bg-green-100 rounded-full dark:bg-green-700 dark:text-green-100">Sudah Listing</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="px-6 py-4">
+                                                    <div class="font-bold">PT Cipta Sarana Medika</div>
+                                                    <div class="text-xs text-gray-500 dark:text-gray-400">DKHH</div>
+                                                </td>
+                                                <td class="px-6 py-4 font-semibold">Rp 132</td>
+                                                <td class="px-6 py-4 hidden sm:table-cell">N/A</td>
+                                                <td class="px-6 py-4 hidden sm:table-cell">08 Mei 2025</td>
+                                                <td class="px-6 py-4"><span class="px-2 py-1 text-xs font-semibold leading-tight text-green-700 bg-green-100 rounded-full dark:bg-green-700 dark:text-green-100">Sudah Listing</span></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="investor-tab-content" class="hidden">
+                     <div class="max-w-5xl mx-auto">
+                        <div class="card p-6 mb-8 text-center">
+                            <h2 class="text-xl font-bold mb-4">Gaya Investor</h2>
+                            <p class="text-gray-500 dark:text-gray-400 mb-2">Lihat saham pilihan berdasarkan gaya investor ternama.</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Mempelajari gaya investor sukses membantu Anda menemukan strategi yang paling sesuai dengan kepribadian dan tujuan keuangan Anda.</p>
+                            <button id="open-investor-modal-button" class="bg-gradient-to-r from-purple-500 to-violet-600 hover:opacity-90 text-white font-bold py-3 px-8 rounded-full transition-opacity duration-300">Pilih Investor Panutan</button>
+                        </div>
+                        <div id="benchmark-results-container" class="space-y-4"></div>
+                    </div>
+                </div>
+
+                <div id="analysis-tab-content" class="hidden">
+                    <div id="analysis-placeholder" class="text-center text-gray-500 dark:text-gray-400 py-16">
+                        <p class="text-lg">Pilih saham dari tab lain untuk dianalisis.</p>
+                    </div>
+                    <div id="analysis-results-container" class="hidden">
+                        <h2 id="stock-name" class="text-3xl font-bold text-center mb-6"></h2>
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <div class="lg:col-span-2 card p-4">
+                                <h3 class="text-xl font-semibold mb-4">Analisis Teknikal</h3>
+                                <div id="technical-chart-container" class="w-full h-[450px]"></div>
+                            </div>
+                            <div class="lg:col-span-1 space-y-6">
+                                <div class="card p-4">
+                                    <h3 class="text-xl font-semibold mb-4">Proyeksi Harga</h3>
+                                    <div id="projection-container"><div class="flex justify-center p-4"><div class="loader"></div></div></div>
+                                </div>
+                                <div class="card p-4">
+                                    <h3 class="text-xl font-semibold mb-4">Analisis Fundamental</h3>
+                                    <div id="company-profile-container"><div class="flex justify-center p-4"><div class="loader"></div></div></div>
+                                    <div id="fundamental-data-container" class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700"><div class="flex justify-center p-4"><div class="loader"></div></div></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="advanced-analysis-container" class="mt-6 card p-6">
+                            <h3 class="text-2xl font-bold text-center mb-4">Analisa Advance</h3>
+                            <div id="advanced-output-container">
+                                <p class="text-center text-gray-500 dark:text-gray-400">Unggah gambar grafik untuk mendapatkan analisis AI yang lebih mendalam.</p>
+                            </div>
+                            <div id="chart-analysis-section" class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                                <ol class="list-decimal list-inside text-sm text-center my-4 space-y-1 text-gray-600 dark:text-gray-400">
+                                    <li>Pada grafik di atas, klik ikon kamera <ion-icon name="camera-outline"></ion-icon> di kanan atas.</li>
+                                    <li>Pilih "Unduh gambar".</li>
+                                    <li>Unggah gambar yang baru saja diunduh ke kotak di bawah ini.</li>
+                                </ol>
+                                <div id="image-upload-area" class="relative w-full p-6 rounded-lg text-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                                    <input type="file" id="chart-image-input" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/png, image/jpeg">
+                                    <div id="upload-placeholder">
+                                        <ion-icon name="cloud-upload-outline" class="text-5xl text-gray-400"></ion-icon>
+                                        <p class="mt-2">Klik untuk mengunggah atau seret gambar ke sini</p>
+                                    </div>
+                                    <img id="image-preview" class="hidden max-h-48 mx-auto rounded-md" alt="Pratinjau Grafik"/>
+                                </div>
+                                <div class="text-center">
+                                    <button id="analyze-chart-button" class="mt-4 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-full transition-colors disabled:opacity-50" disabled>Analisis Grafik</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="education-tab-content" class="hidden">
+                    <div class="max-w-5xl mx-auto">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div class="md:col-span-1">
+                                <div class="card p-4 space-y-2">
+                                    <button class="education-menu-btn w-full text-left p-3 rounded-lg font-semibold bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300" data-content="kamus">Kamus Istilah Saham</button>
+                                    <button class="education-menu-btn w-full text-left p-3 rounded-lg font-semibold hover:bg-gray-100 dark:hover:bg-gray-800" data-content="grafik">Panduan Membaca Grafik</button>
+                                    <button class="education-menu-btn w-full text-left p-3 rounded-lg font-semibold hover:bg-gray-100 dark:hover:bg-gray-800" data-content="checklist">Checklist Investor</button>
+                                </div>
+                            </div>
+                            <div class="md:col-span-3">
+                                <div id="education-main-content" class="card p-6 min-h-[400px]">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+        
+        <!-- Navigasi Bawah untuk Mobile -->
+        <nav class="sm:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-lg flex justify-around z-10">
+            <button data-tab="screener" class="bottom-nav-btn flex-1 flex flex-col items-center justify-center p-2 active">
+                <ion-icon name="search-circle-outline" class="text-2xl"></ion-icon>
+                <span class="text-xs">Screener</span>
+            </button>
+            <button data-tab="discountHunter" class="bottom-nav-btn flex-1 flex flex-col items-center justify-center p-2">
+                <ion-icon name="pricetag-outline" class="text-2xl"></ion-icon>
+                <span class="text-xs">Diskon</span>
+            </button>
+            <button data-tab="investor" class="bottom-nav-btn flex-1 flex flex-col items-center justify-center p-2">
+                <ion-icon name="star-outline" class="text-2xl"></ion-icon>
+                <span class="text-xs">Investor</span>
+            </button>
+            <button data-tab="analysis" class="bottom-nav-btn flex-1 flex flex-col items-center justify-center p-2">
+                <ion-icon name="analytics-outline" class="text-2xl"></ion-icon>
+                <span class="text-xs">Analisis</span>
+            </button>
+            <button data-tab="education" class="bottom-nav-btn flex-1 flex flex-col items-center justify-center p-2">
+                <ion-icon name="book-outline" class="text-2xl"></ion-icon>
+                <span class="text-xs">Edukasi</span>
+            </button>
+        </nav>
+    </div>
+    
+    <div id="modal-container"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyCCV7FD5FQqVW1WnP-Zu6UWAhAz19dthso",
+          authDomain: "analisahamku.firebaseapp.com",
+          projectId: "analisahamku",
+          storageBucket: "analisahamku.appspot.com",
+          messagingSenderId: "503947258604",
+          appId: "1:503947258604:web:f5b10c998ce395405413c9",
+          databaseURL: "https://analisahamku-default-rtdb.asia-southeast1.firebasedatabase.app"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        const loginPage = document.getElementById('login-page');
+        const appPage = document.getElementById('app-page');
+        const loginButton = document.getElementById('login-button');
+        const usernameInput = document.getElementById('username');
+        const tokenInput = document.getElementById('token');
+        const loginError = document.getElementById('login-error');
+
+        if (sessionStorage.getItem('isLoggedIn') === 'true') {
+            loginPage.classList.add('hidden');
+            appPage.classList.remove('hidden');
+            initializeStockApp();
+        }
+
+        loginButton.addEventListener('click', async () => {
+            const username = usernameInput.value.trim();
+            const token = tokenInput.value.trim();
+            if (!username || !token) { loginError.classList.remove('hidden'); return; }
+            const tokenRef = ref(database, 'tokens/' + token);
+            try {
+                const snapshot = await get(tokenRef);
+                if (snapshot.exists()) {
+                    sessionStorage.setItem('isLoggedIn', 'true');
+                    usernameInput.value = '';
+                    tokenInput.value = '';
+                    loginPage.classList.add('hidden');
+                    appPage.classList.remove('hidden');
+                    loginError.classList.add('hidden');
+                    initializeStockApp();
+                } else {
+                    loginError.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error("Error validasi token:", error);
+                loginError.textContent = "Gagal terhubung ke server. Coba lagi.";
+                loginError.classList.remove('hidden');
+            }
+        });
+
+        function initializeStockApp() {
+            const logoutButton = document.getElementById('logout-button');
+            const darkModeToggle = document.getElementById('dark-mode-toggle');
+            const htmlTag = document.documentElement;
+
+            function setDarkMode(isDark) {
+                if (isDark) {
+                    htmlTag.classList.add('dark');
+                    document.body.classList.add('dark');
+                } else {
+                    htmlTag.classList.remove('dark');
+                    document.body.classList.remove('dark');
+                }
+                localStorage.setItem('darkMode', isDark);
+            }
+
+            if (localStorage.getItem('darkMode') === 'true') {
+                darkModeToggle.checked = true;
+                setDarkMode(true);
+            } else {
+                setDarkMode(false);
+            }
+
+            darkModeToggle.addEventListener('change', () => {
+                setDarkMode(darkModeToggle.checked);
+            });
+
+            logoutButton.addEventListener('click', () => {
+                sessionStorage.removeItem('isLoggedIn');
+                window.location.reload();
+            });
+
+            const investors = [
+                { id: 'lkh', name: 'Lo Kheng Hong', style: 'value investing dengan valuasi sangat murah (PBV/PER rendah) dan fundamental kuat.' },
+                { id: 'warren_buffett', name: 'Warren Buffett', style: 'investasi jangka panjang pada perusahaan berkualitas tinggi dengan keunggulan kompetitif yang tahan lama (moat).' },
+                { id: 'peter_lynch', name: 'Peter Lynch', style: 'investasi pada perusahaan yang produknya mudah dipahami (invest in what you know) dan memiliki potensi pertumbuhan tinggi.' },
+                { id: 'benjamin_graham', name: 'Benjamin Graham', style: 'bapak value investing, fokus pada margin of safety, membeli saham di bawah nilai intrinsiknya.' },
+                { id: 'robert_budi_hartono', name: 'Robert Budi Hartono', style: 'investasi jangka panjang di sektor perbankan (BCA) dan konsumen.' },
+                { id: 'michael_hartono', name: 'Michael Hartono', style: 'investasi jangka panjang di sektor perbankan (BCA) dan konsumen.' },
+                { id: 'chairul_tanjung', name: 'Chairul Tanjung', style: 'konglomerasi di berbagai sektor seperti media, ritel, dan keuangan.' },
+                { id: 'prajogo_pangestu', name: 'Prajogo Pangestu', style: 'fokus pada sektor petrokimia dan energi (Barito Pacific, Chandra Asri).' },
+                { id: 'anthoni_salim', name: 'Anthoni Salim', style: 'konglomerasi di sektor makanan (Indofood), telekomunikasi, dan ritel.' },
+                { id: 'george_soros', name: 'George Soros', style: 'spekulasi makro global, memanfaatkan pergerakan mata uang dan suku bunga.' },
+                { id: 'ray_dalio', name: 'Ray Dalio', style: 'prinsip diversifikasi portofolio di berbagai kelas aset (All Weather Portfolio).' },
+                { id: 'carl_icahn', name: 'Carl Icahn', style: 'investor aktivis, membeli saham signifikan untuk mempengaruhi manajemen perusahaan.' },
+                { id: 'cathie_wood', name: 'Cathie Wood', style: 'investasi pada inovasi disruptif di sektor teknologi, genomik, dan blockchain (ARK Invest).' },
+                { id: 'sandiaga_uno', name: 'Sandiaga Uno', style: 'private equity dan investasi pada perusahaan rintisan (startup) melalui Saratoga Investama.' },
+                { id: 'erick_thohir', name: 'Erick Thohir', style: 'investasi di sektor media dan olahraga, seringkali melakukan restrukturisasi BUMN.' },
+                { id: 'garibaldi_thohir', name: 'Garibaldi Thohir', style: 'fokus pada sektor pertambangan batubara (Adaro Energy) dan energi.' },
+                { id: 'theodore_rachmat', name: 'Theodore P. Rachmat', style: 'konglomerasi melalui Triputra Group, fokus pada agribisnis, manufaktur, dan pertambangan.' },
+                { id: 'mochtar_riady', name: 'Mochtar Riady', style: 'pendiri Lippo Group, fokus pada properti, perbankan, kesehatan, dan ritel.' },
+                { id: 'edwin_soeryadjaya', name: 'Edwin Soeryadjaya', style: 'salah satu pendiri Saratoga, investasi di sektor infrastruktur, sumber daya alam, dan konsumen.' },
+                { id: 'putera_sampoerna', name: 'Putera Sampoerna', style: 'investasi di sektor agribisnis dan telekomunikasi setelah menjual perusahaan rokoknya.' },
+                { id: 'martua_sitorus', name: 'Martua Sitorus', style: 'raja minyak sawit, salah satu pendiri Wilmar International.' },
+                { id: 'sukanto_tanoto', name: 'Sukanto Tanoto', style: 'konglomerasi di sektor pulp dan kertas (APRIL), minyak sawit, dan energi.' },
+                { id: 'djoko_susanto', name: 'Djoko Susanto', style: 'pendiri Alfamart, fokus pada sektor ritel konsumen.' },
+                { id: 'ciputra', name: 'Ciputra', style: 'maestro properti, fokus pada pengembangan kota terpadu, perumahan, dan komersial.' },
+                { id: 'low_tuck_kwong', name: 'Low Tuck Kwong', style: 'raja batubara, pendiri Bayan Resources.' },
+                { id: 'patrick_walujo', name: 'Patrick Walujo', style: 'Co-founder Northstar Group, fokus pada investasi private equity di Asia Tenggara, termasuk Gojek.' },
+                { id: 'john_doerr', name: 'John Doerr', style: 'Venture Capitalist legendaris, investasi awal di Google, Amazon. Fokus pada teknologi dan clean energy.' },
+                { id: 'saratoga_investama', name: 'Saratoga Investama Sedaya', style: 'perusahaan investasi aktif dengan portofolio terdiversifikasi di sektor infrastruktur, sumber daya alam, dan konsumen.' },
+                { id: 'northstar_group', name: 'Northstar Group', style: 'perusahaan private equity terkemuka di Asia Tenggara, berinvestasi di berbagai sektor termasuk perbankan, konsumer, dan teknologi.' },
+                { id: 'east_ventures', name: 'East Ventures', style: 'venture capital yang sangat aktif berinvestasi pada startup tahap awal di Indonesia dan Asia Tenggara.' },
+                { id: 'sequoia_capital', name: 'Sequoia Capital', style: 'salah satu firma venture capital paling terkenal di dunia, investasi awal di Apple, Google, dan banyak raksasa teknologi lainnya.' },
+                { id: 'softbank', name: 'SoftBank Vision Fund', style: 'investasi skala besar pada perusahaan teknologi global yang dianggap sebagai pemimpin di sektornya.' },
+                { id: 'blackrock', name: 'BlackRock', style: 'manajer aset terbesar di dunia, menawarkan berbagai produk investasi termasuk ETF (iShares) dan reksa dana.' },
+                { id: 'vanguard', name: 'The Vanguard Group', style: 'pelopor investasi indeks berbiaya rendah, populer di kalangan investor pasif.' },
+                { id: 'berkshire_hathaway', name: 'Berkshire Hathaway', style: 'holding company milik Warren Buffett, berinvestasi di berbagai macam bisnis dari asuransi hingga energi dan barang konsumsi.' },
+                { id: 'mandiri_capital', name: 'Mandiri Capital Indonesia', style: 'corporate venture capital dari Bank Mandiri, berinvestasi pada startup fintech untuk mendukung ekosistem digital.' },
+                { id: 'mdi_ventures', name: 'MDI Ventures', style: 'corporate venture capital dari Telkom Indonesia, berinvestasi pada startup teknologi di berbagai sektor.' },
+                { id: 'gsv_ventures', name: 'GSV Ventures', style: 'venture capital yang fokus pada sektor teknologi pendidikan (EdTech) secara global.' },
+                { id: 'indogen_capital', name: 'Indogen Capital', style: 'venture capital yang membantu startup Indonesia untuk berekspansi ke pasar global.' },
+                { id: 'alpha_jwc', name: 'Alpha JWC Ventures', style: 'venture capital yang berinvestasi pada startup teknologi tahap awal hingga tahap pertumbuhan di Indonesia.' }
+            ];
+
+            const tabs = {
+                screener: { content: document.getElementById('screener-tab-content') },
+                discountHunter: { content: document.getElementById('discount-hunter-tab-content') },
+                investor: { content: document.getElementById('investor-tab-content') },
+                analysis: { content: document.getElementById('analysis-tab-content') },
+                education: { content: document.getElementById('education-tab-content') }
+            };
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const bottomNavButtons = document.querySelectorAll('.bottom-nav-btn');
+            const analysisPlaceholder = document.getElementById('analysis-placeholder');
+            const analysisResultsContainer = document.getElementById('analysis-results-container');
+            const stockName = document.getElementById('stock-name');
+            const technicalChartContainer = document.getElementById('technical-chart-container');
+            const projectionContainer = document.getElementById('projection-container');
+            const companyProfileContainer = document.getElementById('company-profile-container');
+            const fundamentalDataContainer = document.getElementById('fundamental-data-container');
+            const screenerButton = document.getElementById('screener-button');
+            const screenerResultsContainer = document.getElementById('screener-results-container');
+            const sectorSelect = document.getElementById('sector-select');
+            const riskProfileSelect = document.getElementById('risk-profile-select');
+            const multibaggerToggle = document.getElementById('multibagger-toggle');
+            const benchmarkResultsContainer = document.getElementById('benchmark-results-container');
+            const advancedOutputContainer = document.getElementById('advanced-output-container');
+            const findDiscountButton = document.getElementById('find-discount-button');
+            const discountHunterResultsContainer = document.getElementById('discount-hunter-results-container');
+            const discountSectorSelect = document.getElementById('discount-sector-select');
+            const openInvestorModalButton = document.getElementById('open-investor-modal-button');
+            const modalContainer = document.getElementById('modal-container');
+            let selectedInvestor = null;
+            let uploadedImageBase64 = null;
+
+            
+            const FMP_API_KEY = "I9hp8EqbiDnr9PzYnTPAPnSWfocuinFt";
+            const GEMINI_API_KEY = "AIzaSyAiZzzz4h91_cz7YdYXWadmBVoNOUsvtwQ"; 
+            const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${GEMINI_API_KEY}`;
+            
+            function showModal(title, content, isChart = false) {
+                const sizeClass = isChart ? 'max-w-4xl' : 'max-w-lg';
+                const modalHTML = `
+                    <div id="details-modal" class="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center p-4 z-50">
+                        <div class="card w-full ${sizeClass}">
+                            <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                                <h3 class="text-xl font-semibold">${title}</h3>
+                                <button id="close-modal-button" class="text-gray-400 hover:text-gray-800 dark:hover:text-white">
+                                    <ion-icon name="close-outline" class="text-3xl"></ion-icon>
+                                </button>
+                            </div>
+                            <div class="p-6 max-h-[80vh] overflow-y-auto">${content}</div>
+                        </div>
+                    </div>`;
+                modalContainer.innerHTML = modalHTML;
+                document.getElementById('close-modal-button').addEventListener('click', () => {
+                    modalContainer.innerHTML = '';
+                });
+            }
+
+            function showChartModal(ticker) {
+                const title = `Grafik Harga: ${ticker}`;
+                const content = `<div id="modal-chart-container" class="w-full h-[450px]"></div>`;
+                showModal(title, content, true);
+                displayTradingViewWidget(ticker, 'modal-chart-container');
+            }
+            
+            openInvestorModalButton.addEventListener('click', () => {
+                const modalContent = `
+                    <input type="text" id="investor-search-input" placeholder="Cari nama investor..." class="investor-search-input w-full bg-gray-100 border border-gray-300 text-sm p-2 mb-4 rounded-full focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <div id="investor-list" class="space-y-2 max-h-96 overflow-y-auto pr-2"></div>`;
+                showModal('Pilih Investor Panutan', modalContent);
+                renderInvestorList();
+                document.getElementById('investor-search-input').addEventListener('input', (e) => renderInvestorList(e.target.value.toLowerCase()));
+            });
+            
+            function switchTab(activeKey) {
+                Object.keys(tabs).forEach(key => {
+                    const isActive = key === activeKey;
+                    if(tabs[key].content) {
+                        tabs[key].content.classList.toggle('hidden', !isActive);
+                    }
+                });
+                tabButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.tab === activeKey));
+                bottomNavButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.tab === activeKey));
+            }
+
+            tabButtons.forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
+            bottomNavButtons.forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
+            
+            if(screenerButton) screenerButton.addEventListener('click', handleScreenerClick);
+            if(findDiscountButton) findDiscountButton.addEventListener('click', handleDiscountHunterClick);
+
+            function renderInvestorList(filter = '') {
+                const investorListEl = document.getElementById('investor-list');
+                if (!investorListEl) return;
+                investorListEl.innerHTML = '';
+                const filteredInvestors = investors.filter(inv => inv.name.toLowerCase().includes(filter));
+                if (filteredInvestors.length === 0) {
+                     investorListEl.innerHTML = `<p class="text-gray-500 dark:text-gray-400 text-center">Tidak ditemukan.</p>`;
+                     return;
+                }
+                filteredInvestors.forEach(investor => {
+                    const item = document.createElement('div');
+                    item.className = 'p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg cursor-pointer';
+                    item.textContent = investor.name;
+                    item.addEventListener('click', () => {
+                        selectedInvestor = investor;
+                        openInvestorModalButton.textContent = investor.name;
+                        modalContainer.innerHTML = ''; 
+                        handleBenchmarkClick();
+                    });
+                    investorListEl.appendChild(item);
+                });
+            }
+            
+            async function fetchStockQuote(ticker) {
+                const url = `https://financialmodelingprep.com/api/v3/quote/${ticker}?apikey=${FMP_API_KEY}`;
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) return null;
+                    const data = await response.json();
+                    return (data && data.length > 0 && data[0].price) ? parseFloat(data[0].price) : null;
+                } catch (error) {
+                    return null;
+                }
+            }
+
+            async function fetchFromGemini(prompt, schema, retries = 3, delay = 1000, imageBase64 = null) {
+                const parts = [{ text: prompt }];
+                if (imageBase64) {
+                    parts.push({
+                        inlineData: {
+                            mimeType: "image/png",
+                            data: imageBase64
+                        }
+                    });
+                }
+
+                const payload = { 
+                    contents: [{ role: "user", parts: parts }],
+                    generationConfig: schema ? { responseMimeType: "application/json", responseSchema: schema } : {}
+                };
+
+                for (let i = 0; i < retries; i++) {
+                    try {
+                        const response = await fetch(GEMINI_API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                        if (!response.ok) { const errorText = await response.text(); throw new Error(`Gemini API Error: ${response.status} ${errorText}`); }
+                        const result = await response.json();
+                        const textData = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                        if (textData) {
+                            if (schema) {
+                                return JSON.parse(textData);
+                            }
+                        }
+                    } catch (error) { console.error(`Percobaan ${i + 1} gagal:`, error.message); }
+                    if (i < retries - 1) await new Promise(res => setTimeout(res, delay * (i + 1)));
+                }
+                return null;
+            }
+
+            async function handleFetchData(ticker) {
+                switchTab('analysis');
+                analysisPlaceholder.classList.add('hidden');
+                analysisResultsContainer.classList.remove('hidden');
+                stockName.textContent = `Analisis untuk ${ticker}`;
+                projectionContainer.innerHTML = `<div class="flex justify-center p-4"><div class="loader"></div></div>`;
+                companyProfileContainer.innerHTML = `<div class="flex justify-center p-4"><div class="loader"></div></div>`;
+                fundamentalDataContainer.innerHTML = `<div class="flex justify-center p-4"><div class="loader"></div></div>`;
+                advancedOutputContainer.innerHTML = `<p class="text-center text-gray-500 dark:text-gray-400">Unggah gambar grafik untuk mendapatkan analisis AI yang lebih mendalam.</p>`;
+                displayTradingViewWidget(ticker, 'technical-chart-container');
+                fetchFundamentalData(ticker);
+                fetchProjectionData(ticker);
+                fetchCompanyProfile(ticker);
+            }
+            
+            async function handleReAnalysis(ticker, price) {
+                if (!ticker || isNaN(price) || price <= 0) {
+                    showModal('Input Tidak Valid', '<p>Harap masukkan harga yang valid untuk dianalisis.</p>');
+                    return;
+                }
+                switchTab('analysis');
+                analysisPlaceholder.classList.add('hidden');
+                analysisResultsContainer.classList.remove('hidden');
+                stockName.textContent = `Analisis Ulang untuk ${ticker} pada Harga Rp ${price}`;
+                projectionContainer.innerHTML = `<div class="flex justify-center p-4"><div class="loader"></div></div>`;
+                companyProfileContainer.innerHTML = `<div class="flex justify-center p-4"><div class="loader"></div></div>`;
+                fundamentalDataContainer.innerHTML = `<div class="flex justify-center p-4"><div class="loader"></div></div>`;
+                advancedOutputContainer.innerHTML = `<p class="text-center text-gray-500 dark:text-gray-400">Unggah gambar grafik untuk mendapatkan analisis AI yang lebih mendalam.</p>`;
+                displayTradingViewWidget(ticker, 'technical-chart-container');
+                fetchFundamentalData(ticker);
+                fetchProjectionData(ticker, price);
+                fetchCompanyProfile(ticker);
+            }
+
+            function displayTradingViewWidget(ticker, containerId) {
+                const container = document.getElementById(containerId);
+                if (!container) return;
+                container.innerHTML = '';
+                const theme = htmlTag.classList.contains('dark') ? 'dark' : 'light';
+                const tradingViewTicker = `IDX:${ticker.replace('.JK', '')}`;
+                new TradingView.widget({ "width": "100%", "height": "100%", "symbol": tradingViewTicker, "interval": "D", "timezone": "Asia/Jakarta", "theme": theme, "style": "1", "locale": "id", "toolbar_bg": "#f1f3f6", "enable_publishing": false, "allow_symbol_change": true, "container_id": containerId });
+            }
+
+            async function fetchFundamentalData(ticker) {
+                const prompt = `Berikan data fundamental utama untuk ${ticker}: Market Cap, P/E Ratio (TTM), EPS (TTM), ROE, P/B Ratio, Dividend Yield. Format sebagai JSON array: [{"metrik": "...", "nilai": "..."}].`;
+                const schema = { type: "ARRAY", items: { type: "OBJECT", properties: { "metrik": { type: "STRING" }, "nilai": { type: "STRING" } }, required: ["metrik", "nilai"] } };
+                const data = await fetchFromGemini(prompt, schema);
+                displayFundamentalData(data || []);
+            }
+
+            function displayFundamentalData(data) {
+                if (!data || data.length === 0) { fundamentalDataContainer.innerHTML = `<p class="text-center text-sm">Data tidak ditemukan.</p>`; return; }
+                fundamentalDataContainer.innerHTML = '';
+                data.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'flex justify-between items-center bg-gray-100 dark:bg-gray-800 p-3 rounded-lg';
+                    div.innerHTML = `<span class="text-sm">${item.metrik}</span><span class="font-semibold text-md">${item.nilai}</span>`;
+                    fundamentalDataContainer.appendChild(div);
+                });
+            }
+
+            async function fetchCompanyProfile(ticker) {
+                const prompt = `Berikan ringkasan profil singkat untuk ${ticker}. Format sebagai JSON: {"profil": "..."}`;
+                const schema = { type: "OBJECT", properties: { "profil": { type: "STRING" } }, required: ["profil"] };
+                const data = await fetchFromGemini(prompt, schema);
+                displayCompanyProfile(data);
+            }
+
+            function displayCompanyProfile(data) {
+                if (!data || !data.profil) { companyProfileContainer.innerHTML = `<p class="text-center text-sm">Profil tidak ditemukan.</p>`; return; }
+                companyProfileContainer.innerHTML = `<p class="text-sm leading-relaxed">${data.profil}</p>`;
+            }
+            
+            async function fetchProjectionData(ticker, price = null) {
+                let prompt;
+                if (price) {
+                    prompt = `Berikan ringkasan proyeksi harga untuk ${ticker} dengan mempertimbangkan harga saat ini adalah Rp ${price}. Sampaikan dalam 3-4 kalimat. Format sebagai JSON: {"analisis": "..."}`;
+                } else {
+                    prompt = `Berikan ringkasan proyeksi harga untuk ${ticker} dalam 3-4 kalimat. Format sebagai JSON: {"analisis": "..."}`;
+                }
+                const schema = { type: "OBJECT", properties: { "analisis": { type: "STRING" } }, required: ["analisis"] };
+                const data = await fetchFromGemini(prompt, schema);
+                displayProjectionData(data);
+            }
+
+            function displayProjectionData(data) {
+                if (!data || !data.analisis) { projectionContainer.innerHTML = `<p class="text-center">Analisis tidak ditemukan.</p>`; return; }
+                projectionContainer.innerHTML = `<p class="text-sm leading-relaxed">${data.analisis}</p>`;
+            }
+            
+            function displayAdvancedAnalysis(data) {
+                if (!data || !data.rekomendasi) {
+                    advancedOutputContainer.innerHTML = `<p class="text-center">Analisis tidak tersedia.</p>`;
+                    return;
+                }
+
+                const recommendation = data.rekomendasi.toUpperCase();
+                let colorClass, iconName, signalText;
+
+                if (recommendation.includes('BELI')) {
+                    colorClass = 'text-green-500'; iconName = 'trending-up-outline'; signalText = 'Beli';
+                } else if (recommendation.includes('JUAL')) {
+                    colorClass = 'text-red-500'; iconName = 'trending-down-outline'; signalText = 'Jual';
+                } else {
+                    colorClass = 'text-yellow-500'; iconName = 'remove-outline'; signalText = 'Tahan';
+                }
+
+                let positivePointsHTML = data.poin_positif.map(point => `<li class="flex items-start gap-2"><ion-icon name="checkmark-circle-outline" class="text-green-500 text-xl flex-shrink-0"></ion-icon><span>${point}</span></li>`).join('');
+                let negativePointsHTML = data.poin_negatif.map(point => `<li class="flex items-start gap-2"><ion-icon name="close-circle-outline" class="text-red-500 text-xl flex-shrink-0"></ion-icon><span>${point}</span></li>`).join('');
+
+                advancedOutputContainer.innerHTML = `
+                    <div class="text-center">
+                        <p class="text-sm font-bold ${colorClass}">SINYAL AI</p>
+                        <p class="text-4xl font-extrabold ${colorClass}">${signalText}</p>
+                        <p class="mt-2 text-center text-md max-w-2xl mx-auto">${data.ringkasan || ''}</p>
+                    </div>
+                    <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                        <div>
+                            <h5 class="font-bold mb-2 text-green-600 dark:text-green-400">Sinyal Positif (Bullish)</h5>
+                            <ul class="space-y-2">${positivePointsHTML}</ul>
+                        </div>
+                        <div>
+                            <h5 class="font-bold mb-2 text-red-600 dark:text-red-400">Sinyal Negatif (Bearish)</h5>
+                            <ul class="space-y-2">${negativePointsHTML}</ul>
+                        </div>
+                    </div>
+                `;
+            }
+
+            async function fetchAndDisplayStocks(container, prompt, schema, displayFunction, ...displayArgs) {
+                container.innerHTML = `<div class="flex justify-center p-4"><div class="loader"></div></div>`;
+                const stocksFromGemini = await fetchFromGemini(prompt, schema);
+                
+                if (!stocksFromGemini || stocksFromGemini.length === 0) {
+                    container.innerHTML = `<p class="text-center">Tidak ditemukan saham yang cocok.</p>`;
+                    return;
+                }
+                
+                displayFunction(stocksFromGemini, ...displayArgs);
+
+                stocksFromGemini.forEach(async (stock) => {
+                    const tickerWithSuffix = stock.ticker.trim() + '.JK';
+                    const price = await fetchStockQuote(tickerWithSuffix);
+                    const priceInput = document.getElementById(`price-input-${stock.ticker}`);
+                    if (priceInput && price) {
+                        priceInput.value = price.toFixed(0);
+                    }
+                });
+            }
+
+            async function handleScreenerClick() {
+                screenerButton.disabled = true; screenerButton.classList.add('opacity-50');
+                const isMultibagger = multibaggerToggle.checked;
+                const selectedSector = sectorSelect.value;
+                let sectorQuery = (selectedSector !== "semua") ? ` dari sektor ${selectedSector}` : "";
+                let prompt, schema;
+                
+                if (isMultibagger) {
+                    prompt = `Cari 5 saham di BEI${sectorQuery} yang memiliki rekam jejak sebagai multibagger. Sertakan ticker, nama perusahaan, dan bukti sejarahnya. Berikan alasan singkat. Format sebagai JSON array: ticker, nama_perusahaan, bukti, alasan.`;
+                    schema = { type: "ARRAY", items: { type: "OBJECT", properties: { ticker: { type: "STRING" }, nama_perusahaan: { type: "STRING" }, bukti: { type: "STRING" }, alasan: { type: "STRING" } }, required: ["ticker", "nama_perusahaan", "bukti", "alasan"] } };
+                } else {
+                    const selectedRiskProfile = riskProfileSelect.value;
+                    let riskProfileQuery = "";
+                    if (selectedRiskProfile === "stabil") { riskProfileQuery = " Fokus pada saham 'value' atau 'blue-chip'."; }
+                    else if (selectedRiskProfile === "pertumbuhan") { riskProfileQuery = " Fokus pada saham 'growth'."; }
+                    prompt = `Berikan peringkat 5 besar saham di BEI${sectorQuery} dengan potensi terbaik.${riskProfileQuery} Sertakan: peringkat, ticker, nama perusahaan, dan alasan singkat. Format sebagai JSON array.`;
+                    schema = { type: "ARRAY", items: { type: "OBJECT", properties: { peringkat: { type: "NUMBER" }, ticker: { type: "STRING" }, nama_perusahaan: { type: "STRING" }, alasan: { type: "STRING" } }, required: ["peringkat", "ticker", "nama_perusahaan", "alasan"] } };
+                }
+                try {
+                    await fetchAndDisplayStocks(screenerResultsContainer, prompt, schema, displayScreenerResults, isMultibagger);
+                } finally {
+                    screenerButton.disabled = false; screenerButton.classList.remove('opacity-50');
+                }
+            }
+            
+            async function handleDiscountHunterClick() {
+                findDiscountButton.disabled = true; findDiscountButton.classList.add('opacity-50');
+                const selectedSector = discountSectorSelect.value;
+                let sectorQuery = (selectedSector !== "semua") ? ` dari sektor ${selectedSector}` : "";
+                const prompt = `Cari 5 saham berfundamental kuat di BEI${sectorQuery} yang harganya sedang terkoreksi. Sertakan persentase penurunan dan periodenya. Berikan alasan singkat. Format sebagai JSON array: ticker, nama_perusahaan, penurunan_persen, periode_penurunan, dan alasan.`;
+                const schema = { type: "ARRAY", items: { type: "OBJECT", properties: { ticker: { type: "STRING" }, nama_perusahaan: { type: "STRING" }, penurunan_persen: { type: "STRING" }, periode_penurunan: { type: "STRING" }, alasan: { type: "STRING" } }, required: ["ticker", "nama_perusahaan", "penurunan_persen", "periode_penurunan", "alasan"] } };
+                try {
+                     await fetchAndDisplayStocks(discountHunterResultsContainer, prompt, schema, displayDiscountHunterResults);
+                } finally {
+                    findDiscountButton.disabled = false; findDiscountButton.classList.remove('opacity-50');
+                }
+            }
+            
+            function displayCard(stock, container, iconInfo, headerContent) {
+                 const item = document.createElement('div');
+                 item.className = 'card p-4';
+                 item.innerHTML = `
+                    <div class="flex items-start gap-4">
+                        <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center ${iconInfo.bgColor} ${iconInfo.textColor} rounded-full mt-1">
+                            ${iconInfo.iconName ? `<ion-icon name="${iconInfo.iconName}" class="text-3xl"></ion-icon>` : headerContent}
+                        </div>
+                        <div class="flex-grow">
+                            <div class="flex justify-between items-center">
+                                <h4 class="text-lg font-bold">${stock.ticker}</h4>
+                                ${iconInfo.iconName ? headerContent : ''}
+                            </div>
+                            <p class="text-md">${stock.nama_perusahaan}</p>
+                            
+                            <div class="mt-2 flex items-center gap-2">
+                                <span class="font-semibold">Rp</span>
+                                <input type="number" id="price-input-${stock.ticker}" placeholder="Harga..." class="price-input w-24 bg-gray-100 border border-gray-300 text-sm rounded-lg p-1.5 focus:ring-blue-500 focus:border-blue-500">
+                                <button class="view-chart-btn text-blue-500 hover:text-blue-600" title="Lihat harga di sini" data-ticker="${stock.ticker}">
+                                    <ion-icon name="analytics-outline" class="text-xl"></ion-icon>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <p class="text-sm">${stock.alasan}</p>
+                        <div class="mt-4 flex flex-wrap gap-2 items-center">
+                            ${stock.bukti ? `<button class="show-details-btn bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 font-semibold py-1.5 px-3 rounded-full text-xs" data-title="Bukti Multibagger: ${stock.ticker}" data-content="${stock.bukti}">Lihat Bukti</button>` : ''}
+                            <button class="goto-analysis-btn bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 font-semibold py-1.5 px-3 rounded-full text-xs" data-ticker="${stock.ticker}">Analisis Lengkap</button>
+                            <button class="re-analyze-btn bg-blue-500 hover:bg-blue-600 text-white font-bold py-1.5 px-3 rounded-full text-xs" data-ticker="${stock.ticker}">Analisis Ulang</button>
+                        </div>
+                    </div>`;
+                 container.appendChild(item);
+            }
+
+            function displayDiscountHunterResults(stocks) {
+                discountHunterResultsContainer.innerHTML = '';
+                if (!stocks || stocks.length === 0) { discountHunterResultsContainer.innerHTML = `<p class="text-center">Tidak ditemukan saham diskon yang menarik.</p>`; return; }
+                stocks.forEach(stock => {
+                    const iconInfo = { bgColor: 'bg-cyan-100', textColor: 'text-cyan-600', iconName: 'pricetag-outline' };
+                    const headerContent = `<div class="bg-red-100 text-red-800 text-sm font-bold px-3 py-1 rounded-full">${stock.penurunan_persen}</div>`;
+                    displayCard(stock, discountHunterResultsContainer, iconInfo, headerContent);
+                });
+            }
+
+            function displayScreenerResults(stocks, isMultibagger = false) {
+                screenerResultsContainer.innerHTML = '';
+                if (!stocks || stocks.length === 0) { screenerResultsContainer.innerHTML = `<p class="text-center">Tidak ditemukan saham yang cocok.</p>`; return; }
+                stocks.forEach(stock => {
+                    let iconInfo, headerContent = '';
+                    if (isMultibagger) {
+                        iconInfo = { bgColor: 'bg-gradient-to-br from-blue-400 to-indigo-500', textColor: 'text-white', iconName: 'rocket-outline' };
+                    } else {
+                        const rankColorBg = stock.peringkat <= 3 ? 'bg-green-100 dark:bg-green-900' : 'bg-yellow-100 dark:bg-yellow-900';
+                        const rankColorText = stock.peringkat <= 3 ? 'text-green-800 dark:text-green-200' : 'text-yellow-800 dark:text-yellow-200';
+                        headerContent = `<div class="w-10 h-10 flex items-center justify-center rounded-full font-bold text-xl">${stock.peringkat}</div>`;
+                        iconInfo = { bgColor: rankColorBg, textColor: rankColorText, iconName: '' };
+                    }
+                    displayCard(stock, screenerResultsContainer, iconInfo, headerContent);
+                });
+            }
+
+            async function handleBenchmarkClick() {
+                if (!selectedInvestor) { benchmarkResultsContainer.innerHTML = `<p class="text-center">Pilih seorang investor.</p>`; return; }
+                const prompt = `Identifikasi 5 saham di BEI yang paling merepresentasikan gaya investasi ${selectedInvestor.name} (${selectedInvestor.style}). Untuk setiap saham, sertakan ticker, nama_perusahaan, dan alasan singkat. Jika ada, sebutkan juga riwayat atau posisi signifikan investor tersebut di saham ini yang pernah diketahui publik.`;
+                const schema = { type: "ARRAY", items: { type: "OBJECT", properties: { ticker: { type: "STRING" }, nama_perusahaan: { type: "STRING" }, alasan: { type: "STRING" } }, required: ["ticker", "nama_perusahaan", "alasan"] } };
+                await fetchAndDisplayStocks(benchmarkResultsContainer, prompt, schema, displayBenchmarkResults);
+            }
+
+            function displayBenchmarkResults(stocks) {
+                benchmarkResultsContainer.innerHTML = '';
+                if (!stocks || stocks.length === 0) { benchmarkResultsContainer.innerHTML = `<p class="text-center">Tidak ditemukan data.</p>`; return; }
+                stocks.forEach(stock => {
+                    const iconInfo = { bgColor: 'bg-purple-100 dark:bg-purple-900', textColor: 'text-purple-800 dark:text-purple-200', iconName: 'star-outline' };
+                    displayCard(stock, benchmarkResultsContainer, iconInfo, '');
+                });
+            }
+
+            document.body.addEventListener('click', function(event) {
+                const target = event.target;
+                const button = target.closest('button');
+                if (!button) return;
+
+                if (button.classList.contains('goto-analysis-btn')) {
+                    const ticker = button.dataset.ticker;
+                    if (ticker) handleFetchData(ticker);
+                } else if (button.classList.contains('re-analyze-btn')) {
+                    const ticker = button.dataset.ticker;
+                    const priceInput = document.getElementById(`price-input-${ticker}`);
+                    const price = parseFloat(priceInput.value);
+                    handleReAnalysis(ticker, price);
+                } else if (button.classList.contains('show-details-btn')) {
+                    const title = button.dataset.title;
+                    const content = button.dataset.content;
+                    showModal(title, content);
+                } else if (button.classList.contains('view-chart-btn')) {
+                    const ticker = button.dataset.ticker;
+                    if (ticker) showChartModal(ticker);
+                }
+            });
+
+            function fileToBase64(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = () => resolve(reader.result.split(',')[1]);
+                    reader.onerror = error => reject(error);
+                });
+            }
+
+            const chartImageInput = document.getElementById('chart-image-input');
+            const imagePreview = document.getElementById('image-preview');
+            const uploadPlaceholder = document.getElementById('upload-placeholder');
+            const analyzeChartButton = document.getElementById('analyze-chart-button');
+
+            chartImageInput.addEventListener('change', async (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    imagePreview.src = URL.createObjectURL(file);
+                    imagePreview.classList.remove('hidden');
+                    uploadPlaceholder.classList.add('hidden');
+                    analyzeChartButton.disabled = false;
+                    uploadedImageBase64 = await fileToBase64(file);
+                }
+            });
+            
+            analyzeChartButton.addEventListener('click', async () => {
+                if (!uploadedImageBase64) {
+                    showModal('Gambar Tidak Ditemukan', '<p>Harap unggah gambar grafik terlebih dahulu.</p>');
+                    return;
+                }
+                advancedOutputContainer.innerHTML = `<div class="flex justify-center p-4"><div class="loader"></div></div>`;
+                const prompt = "Analisis gambar grafik saham ini. Identifikasi pola candlestick, level support/resistance, dan indikator teknikal yang terlihat. Berikan rekomendasi trading (Beli/Tahan/Jual) dan ringkasan singkat. Lalu, berikan poin-poin positif (bullish) dan negatif (bearish) dalam bentuk array. Format sebagai JSON.";
+                const schema = {
+                    type: "OBJECT",
+                    properties: {
+                        rekomendasi: { type: "STRING" },
+                        ringkasan: { type: "STRING" },
+                        poin_positif: { type: "ARRAY", items: { type: "STRING" } },
+                        poin_negatif: { type: "ARRAY", items: { type: "STRING" } }
+                    },
+                    required: ["rekomendasi", "ringkasan", "poin_positif", "poin_negatif"]
+                };
+                const data = await fetchFromGemini(prompt, schema, 3, 1000, uploadedImageBase64);
+                displayAdvancedAnalysis(data);
+            });
+            
+            const educationMenuBtns = document.querySelectorAll('.education-menu-btn');
+            const educationMainContent = document.getElementById('education-main-content');
+
+            educationMenuBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    educationMenuBtns.forEach(b => b.classList.remove('bg-blue-100', 'dark:bg-blue-900', 'text-blue-700', 'dark:text-blue-300'));
+                    btn.classList.add('bg-blue-100', 'dark:bg-blue-900', 'text-blue-700', 'dark:text-blue-300');
+                    const contentId = btn.dataset.content;
+                    loadEducationContent(contentId);
+                });
+            });
+
+            function loadEducationContent(contentId) {
+                educationMainContent.innerHTML = `<div class="flex justify-center items-center h-full"><div class="loader"></div></div>`;
+                let contentHTML = '';
+
+                switch (contentId) {
+                    case 'kamus':
+                        const kamusTerms = ['Analis', 'ARA & ARB', 'Aset', 'Bearish', 'Bid & Ask', 'Blue Chip', 'Bullish', 'Buyback', 'Candlestick', 'Capital Gain', 'Cut Loss', 'Dividen', 'Downtrend', 'Emiten', 'EPS', 'Fundamental', 'Growth Investing', 'Harga Saham', 'IHSG', 'Indeks Saham', 'Laba Bersih', 'Likuiditas', 'Lot', 'Margin of Safety', 'Market Cap', 'PBV', 'PER', 'Portofolio', 'RUPS', 'Saham', 'Sekuritas', 'Support & Resistance', 'Suspensi', 'Take Profit', 'Tbk', 'Tren', 'Uptrend', 'Valuasi', 'Value Investing', 'Volatilitas'];
+                        const groupedTerms = kamusTerms.reduce((acc, term) => {
+                            const firstLetter = term[0].toUpperCase();
+                            if (!acc[firstLetter]) {
+                                acc[firstLetter] = [];
+                            }
+                            acc[firstLetter].push(term);
+                            return acc;
+                        }, {});
+
+                        contentHTML = `
+                            <h3 class="text-xl font-bold mb-4">Kamus Istilah Saham</h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Pilih grup abjad, lalu klik istilah untuk mendapatkan penjelasan dari AI.</p>
+                            <div id="kamus-groups" class="flex flex-wrap gap-2 mb-4">
+                                ${Object.keys(groupedTerms).map(letter => `<button class="kamus-group-btn bg-gray-200 dark:bg-gray-700 p-2 rounded-md font-semibold" data-letter="${letter}">${letter}</button>`).join('')}
+                            </div>
+                            <div id="kamus-terms-container" class="flex flex-wrap gap-2 mb-6"></div>
+                            <div id="kamus-explanation" class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg min-h-[150px]"></div>
+                        `;
+                        educationMainContent.innerHTML = contentHTML;
+                        
+                        document.querySelectorAll('.kamus-group-btn').forEach(btn => {
+                            btn.addEventListener('click', () => {
+                                document.querySelectorAll('.kamus-group-btn').forEach(b => b.classList.remove('bg-blue-500', 'text-white'));
+                                btn.classList.add('bg-blue-500', 'text-white');
+                                const letter = btn.dataset.letter;
+                                const terms = groupedTerms[letter];
+                                const termsContainer = document.getElementById('kamus-terms-container');
+                                termsContainer.innerHTML = terms.map(term => `<button class="kamus-term-btn bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 font-semibold py-1.5 px-3 rounded-full text-xs">${term}</button>`).join('');
+                                
+                                document.querySelectorAll('.kamus-term-btn').forEach(termBtn => {
+                                    termBtn.addEventListener('click', async () => {
+                                        const term = termBtn.textContent;
+                                        const explanationDiv = document.getElementById('kamus-explanation');
+                                        explanationDiv.innerHTML = `<div class="flex justify-center p-4"><div class="loader"></div></div>`;
+                                        const prompt = `Jelaskan istilah saham "${term}" dengan bahasa yang sederhana dan analogi yang mudah dipahami pemula dalam satu paragraf singkat.`;
+                                        const schema = { type: "OBJECT", properties: { penjelasan: { type: "STRING" } } };
+                                        const result = await fetchFromGemini(prompt, schema);
+                                        explanationDiv.innerHTML = result ? `<p>${result.penjelasan}</p>` : `<p>Gagal memuat penjelasan.</p>`;
+                                    });
+                                });
+                            });
+                        });
+                        break;
+                    
+                    case 'grafik':
+                        contentHTML = `
+                            <h3 class="text-xl font-bold mb-4">Membedah Grafik Saham Seperti Komik!</h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Bayangkan kamu adalah seorang detektif. Grafik harga saham itu seperti jejak kaki yang ditinggalkan penjahat. Kalau kamu bisa membacanya, kamu bisa menebak ke mana dia akan pergi selanjutnya! Mari kita belajar bareng.</p>
+                            
+                            <div class="space-y-8">
+                                <!-- Bagian 1: Candlestick -->
+                                <div>
+                                    <h4 class="font-semibold text-lg mb-2">1. Kenalan sama si Lilin Ajaib (Candlestick)</h4>
+                                    <p class="mb-4">Setiap batang di grafik itu namanya "candlestick" atau lilin. Satu lilin biasanya menceritakan apa yang terjadi pada harga saham dalam satu hari.</p>
+                                    <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg text-center">
+                                        <pre class="font-mono text-sm leading-relaxed whitespace-pre-wrap">
+  Sumbu Atas (Harga Tertinggi)
+      |
+   +-----+
+   |     |  <-- Badan Lilin (Pertarungan Harga)
+   +-----+
+      |
+  Sumbu Bawah (Harga Terendah)
+                                        </pre>
+                                    </div>
+                                    <ul class="mt-4 space-y-2 text-sm list-disc list-inside">
+                                        <li><strong>Badan Lilin (Kotaknya):</strong> Ini inti ceritanya.
+                                            <ul class="pl-5 mt-1 space-y-1">
+                                                <li><span class="font-bold text-green-600">Badan HIJAU:</span> Artinya, harga penutupan lebih TINGGI dari harga pembukaan. Hari yang ceria, pembeli menang! Harga NAIK.</li>
+                                                <li><span class="font-bold text-red-600">Badan MERAH:</span> Artinya, harga penutupan lebih RENDAH dari harga pembukaan. Hari yang sedih, penjual menang! Harga TURUN.</li>
+                                            </ul>
+                                        </li>
+                                        <li><strong>Sumbu (Garis Tipis Atas & Bawah):</strong> Ini adalah "gosip" hari itu. Sumbu atas menunjukkan harga paling tinggi yang pernah dicapai, dan sumbu bawah menunjukkan harga paling rendah.</li>
+                                    </ul>
+                                </div>
+
+                                <!-- Bagian 2: Tren -->
+                                <div>
+                                    <h4 class="font-semibold text-lg mb-2">2. Melihat Arah Perjalanan Harga (Tren)</h4>
+                                    <p class="mb-4">Kalau kamu lihat banyak lilin berjejer, mereka akan membentuk sebuah pola atau "tren". Ini seperti melihat peta perjalanan.</p>
+                                    <ul class="space-y-2 text-sm list-disc list-inside">
+                                        <li><strong>Tren Naik (Uptrend):</strong> Puncak-puncak lilinnya makin lama makin tinggi, lembahnya juga. Bayangkan mendaki gunung. Ini pertanda bagus, harga cenderung terus naik.</li>
+                                        <li><strong>Tren Turun (Downtrend):</strong> Kebalikannya, lembah-lembahnya makin lama makin dalam. Bayangkan menuruni bukit. Ini pertanda kurang bagus, harga cenderung terus turun.</li>
+                                        <li><strong>Tren Datar (Sideways):</strong> Harganya naik-turun tapi di area yang itu-itu saja. Seperti mobil terjebak macet. Investor biasanya menunggu sampai ada tanda mau naik atau turun.</li>
+                                    </ul>
+                                </div>
+
+                                <!-- Bagian 3: Volume -->
+                                <div>
+                                    <h4 class="font-semibold text-lg mb-2">3. Seberapa Ramai Pestanya? (Volume)</h4>
+                                    <p class="mb-4">Di bawah grafik harga, biasanya ada grafik batang lagi. Itu namanya "Volume", yang menunjukkan berapa banyak saham yang diperjualbelikan hari itu.</p>
+                                    <ul class="space-y-2 text-sm list-disc list-inside">
+                                        <li><strong>Volume Tinggi:</strong> Artinya banyak banget orang yang jual-beli. Kalau ini terjadi saat harga NAIK (lilin hijau), itu pertanda kenaikannya kuat. Tapi kalau terjadi saat harga TURUN (lilin merah), artinya banyak yang panik menjual.</li>
+                                        <li><strong>Volume Rendah:</strong> Artinya sepi, tidak banyak yang tertarik. Pergerakan harga jadi kurang bisa dipercaya.</li>
+                                    </ul>
+                                </div>
+
+                                <!-- Bagian 4: Contoh Nyata -->
+                                <div>
+                                    <h4 class="font-semibold text-lg mb-2">4. Contoh Nyata: Membedah Grafik BBCA Milikmu!</h4>
+                                    <p class="mb-4">Sekarang, mari kita jadi detektif dan lihat contoh nyata dari gambar grafik saham Bank Central Asia (BBCA) yang kamu berikan.</p>
+                                    <div class="my-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                        <img src="https://res.cloudinary.com/dxeram9ta/image/upload/v1754877359/BBCA_2025-08-10_21-18-40_iyauvi.png" class="mx-auto rounded-lg object-contain" alt="Contoh Grafik Saham BBCA dari Pengguna">
+                                    </div>
+                                    <ul class="mt-4 space-y-2 text-sm list-disc list-inside">
+                                        <li><strong>Melihat Tren:</strong> Lihat dari bulan Maret hingga awal Juni. Puncak harganya terus naik, kan? Itu namanya <strong>Tren Naik (Uptrend)</strong>. Tapi setelah itu, dari Juni sampai Agustus, puncaknya mulai menurun. Nah, ini namanya <strong>Tren Turun (Downtrend)</strong>.</li>
+                                        <li><strong>Melihat Lilin Penting:</strong> Perhatikan di akhir Maret dan awal April. Ada beberapa lilin hijau yang badannya panjang-panjang. Ini menunjukkan semangat membeli yang sangat tinggi!</li>
+                                        <li><strong>Melihat Volume:</strong> Lihat grafik batang di bagian paling bawah. Saat lilin-lilin hijau panjang muncul di bulan Maret-April, volume (batang di bawah) juga ikut tinggi. Ini mengkonfirmasi bahwa kenaikan harga itu "serius" karena banyak yang ikut "pesta".</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <p class="mt-8 text-center text-sm font-semibold text-blue-600 dark:text-blue-400">Selamat! Kamu sudah tahu dasar-dasar membaca grafik. Semakin sering berlatih, matamu akan semakin tajam seperti detektif handal!</p>
+                        `;
+                         educationMainContent.innerHTML = contentHTML;
+                        break;
+                    
+                    case 'checklist':
+                        const checklistItems = [
+                            { text: 'Apakah saya memahami bisnis perusahaan ini?', weight: 30 },
+                            { text: 'Apakah perusahaan ini mencetak laba secara konsisten?', weight: 25 },
+                            { text: 'Apakah utang perusahaan ini wajar?', weight: 20 },
+                            { text: 'Apakah valuasi saham ini masuk akal (tidak terlalu mahal)?', weight: 15 },
+                            { text: 'Apakah saya siap jika harga saham ini turun 20%?', weight: 10 }
+                        ];
+
+                        contentHTML = `
+                            <h3 class="text-xl font-bold mb-4">Checklist Investor Pemula</h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Gunakan daftar periksa ini untuk mengukur kelayakan sebuah saham sebelum berinvestasi.</p>
+                            <div id="checklist-container" class="space-y-3 text-left">
+                                ${checklistItems.map(item => `
+                                <div class="flex items-center">
+                                    <input type="checkbox" class="checklist-item h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" data-weight="${item.weight}">
+                                    <label class="ml-3 block text-sm font-medium">${item.text} <span class="text-xs text-gray-400">(${item.weight} poin)</span></label>
+                                </div>
+                                `).join('')}
+                            </div>
+                            <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                <h4 class="font-bold text-center">Skor Kelayakan Investasi</h4>
+                                <div class="w-full bg-gray-200 rounded-full h-4 dark:bg-gray-700 mt-2">
+                                    <div id="checklist-progress" class="bg-blue-600 h-4 rounded-full" style="width: 0%"></div>
+                                </div>
+                                <p id="checklist-score" class="text-center font-bold text-2xl mt-2">0%</p>
+                                <p id="checklist-recommendation" class="text-center text-sm text-gray-500 dark:text-gray-400"></p>
+                            </div>
+                        `;
+                        educationMainContent.innerHTML = contentHTML;
+                        
+                        const checklistContainer = document.getElementById('checklist-container');
+                        checklistContainer.addEventListener('change', () => {
+                            let totalScore = 0;
+                            const checkboxes = document.querySelectorAll('.checklist-item:checked');
+                            checkboxes.forEach(box => {
+                                totalScore += parseInt(box.dataset.weight);
+                            });
+
+                            const progressBar = document.getElementById('checklist-progress');
+                            const scoreEl = document.getElementById('checklist-score');
+                            const recommendationEl = document.getElementById('checklist-recommendation');
+                            
+                            progressBar.style.width = `${totalScore}%`;
+                            scoreEl.textContent = `${totalScore}%`;
+
+                            if (totalScore >= 80) {
+                                recommendationEl.textContent = "Sangat Layak Dipertimbangkan";
+                                progressBar.className = 'bg-green-500 h-4 rounded-full';
+                            } else if (totalScore >= 50) {
+                                recommendationEl.textContent = "Layak Dianalisis Lebih Lanjut";
+                                progressBar.className = 'bg-yellow-500 h-4 rounded-full';
+                            } else {
+                                recommendationEl.textContent = "Perlu Pertimbangan Ekstra";
+                                progressBar.className = 'bg-red-500 h-4 rounded-full';
+                            }
+                        });
+                        break;
+                }
+            }
+            
+            loadEducationContent('kamus');
+
+
+            switchTab('screener');
+        }
+    </script>
+
+</body>
+</html>
