@@ -7,7 +7,7 @@ const cron = require('node-cron');
 const cors = require('cors');
 // TAMBAHAN: Impor node-fetch untuk panggilan API eksternal (Gemini)
 const fetch = require('node-fetch'); 
-// PERUBAHAN: Impor Firebase (tetap)
+// PERUBAHAN: Impor Firebase Realtime Database (RTDB) (Hanya untuk Token)
 const { initializeApp } = require('firebase/app');
 const { getDatabase, ref, set, remove } = require('firebase/database');
 
@@ -19,7 +19,7 @@ const GEMINI_MODEL = 'gemini-2.5-flash-preview-05-20';
 const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
 const GOOGLE_SEARCH_TOOL = { "google_search": {} }; // Alat Google Search untuk grounding
 
-// 3. Konfigurasi Firebase (Salin dari aplikasi utama Anda)
+// 3. Konfigurasi Firebase RTDB (untuk manajemen token)
 const firebaseConfig = {
     apiKey: "AIzaSyCCV7FD5FQqVW1WnP-Zu6UWAhAz19dthso",
     authDomain: "analisahamku.firebaseapp.com",
@@ -41,10 +41,10 @@ let currentToken = '';
 
 // 6. Konfigurasi Middleware
 app.use(cors());
-// BARU: Middleware untuk memproses body JSON dari client (PENTING untuk proxy)
+// Middleware untuk memproses body JSON dari client (PENTING untuk proxy)
 app.use(express.json()); 
 
-// 7. Fungsi untuk membuat dan menyimpan token baru (tetap sama)
+// 7. Fungsi untuk membuat dan menyimpan token baru
 async function generateAndSaveNewToken() {
     const oldToken = currentToken;
     const newToken = Math.floor(100000 + Math.random() * 900000).toString();
@@ -68,11 +68,10 @@ async function generateAndSaveNewToken() {
 }
 
 // 8. API Endpoint untuk PROXY PANGGILAN GEMINI (PERBAIKAN JALUR!)
-// Jalur diubah dari '/gemini-proxy' menjadi '/api/gemini-proxy'
+// ENDPOINT INI WAJIB MENGGUNAKAN /api/gemini-proxy
 app.post('/api/gemini-proxy', async (req, res) => {
     // 8.1. Cek Kunci API
     if (!GEMINI_API_KEY) {
-        // Ini hanya terjadi jika Anda lupa mengkonfigurasi Environment Variable di Render
         return res.status(500).json({ error: 'GEMINI_API_KEY is not configured on the server.' });
     }
 
@@ -125,7 +124,7 @@ app.post('/api/gemini-proxy', async (req, res) => {
         
         const geminiResult = await geminiResponse.json();
 
-        // 8.4. BARU: Ekstraksi konten teks dari respons Gemini
+        // 8.4. Ekstraksi konten teks dari respons Gemini
         const textData = geminiResult.candidates?.[0]?.content?.parts?.[0]?.text;
 
         if (!textData) {
@@ -142,7 +141,7 @@ app.post('/api/gemini-proxy', async (req, res) => {
     }
 });
 
-// 9. API Endpoint untuk mengambil token (opsional, bisa dihapus jika tidak perlu)
+// 9. API Endpoint untuk mengambil token (opsional)
 app.get('/api/get-token', (req, res) => {
     res.json({ token: currentToken });
 });
