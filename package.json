@@ -6,11 +6,9 @@
 "node-cron": "^4.2.1",
 "node-fetch": "^2.6.1"
 },
-// BARU: Menambahkan versi Node.js yang disarankan
 "engines": {
 "node": ">=18.0.0"
 },
-// BARU: Menambahkan skrip start yang standar
 "scripts": {
 "start": "node server.js"
 }
