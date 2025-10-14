@@ -5,21 +5,17 @@
 const express = require('express');
 const cron = require('node-cron');
 const cors = require('cors');
-// TAMBAHAN: Impor node-fetch untuk panggilan API eksternal (Gemini)
 const fetch = require('node-fetch'); 
-// PERUBAHAN: Impor Firebase Realtime Database (RTDB) (Hanya untuk Token)
 const { initializeApp } = require('firebase/app');
 const { getDatabase, ref, set, remove } = require('firebase/database');
 
 // 2. Konfigurasi Lingkungan (Environment Variables)
-// **PENTING:** Ambil Kunci API Gemini dari Environment Variables Render
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY; 
 const GEMINI_MODEL = 'gemini-2.5-flash-preview-05-20';
-// URL API yang akan dipanggil secara aman dari Server
 const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
-const GOOGLE_SEARCH_TOOL = { "google_search": {} }; // Alat Google Search untuk grounding
+const GOOGLE_SEARCH_TOOL = { "google_search": {} };
 
-// 3. Konfigurasi Firebase RTDB (untuk manajemen token)
+// 3. Konfigurasi Firebase RTDB (untuk manajemen token saja)
 const firebaseConfig = {
     apiKey: "AIzaSyCCV7FD5FQqVW1WnP-Zu6UWAhAz19dthso",
     authDomain: "analisahamku.firebaseapp.com",
@@ -35,13 +31,10 @@ const firebaseApp = initializeApp(firebaseConfig);
 const database = getDatabase(firebaseApp);
 const app = express();
 const PORT = process.env.PORT || 3000;
-
-// 5. Variabel untuk menyimpan token saat ini
 let currentToken = '';
 
 // 6. Konfigurasi Middleware
 app.use(cors());
-// Middleware untuk memproses body JSON dari client (PENTING untuk proxy)
 app.use(express.json()); 
 
 // 7. Fungsi untuk membuat dan menyimpan token baru
@@ -56,7 +49,6 @@ async function generateAndSaveNewToken() {
             createdAt: new Date().toISOString()
         });
         console.log(`[${new Date().toLocaleString('id-ID')}] Token baru ${currentToken} berhasil disimpan ke Firebase.`);
-
         if (oldToken) {
             const oldTokenRef = ref(database, 'tokens/' + oldToken);
             await remove(oldTokenRef);
@@ -67,8 +59,12 @@ async function generateAndSaveNewToken() {
     }
 }
 
-// 8. API Endpoint untuk PROXY PANGGILAN GEMINI (PERBAIKAN JALUR!)
-// ENDPOINT INI WAJIB MENGGUNAKAN /api/gemini-proxy
+// 8.0. Rute Utama (Menghilangkan error 'Cannot GET /')
+app.get('/', (req, res) => {
+    res.send('Stock Analysis API Proxy Server is Running and Operational.');
+});
+
+// 8. API Endpoint untuk PROXY PANGGILAN GEMINI (WAJIB: /api/gemini-proxy)
 app.post('/api/gemini-proxy', async (req, res) => {
     // 8.1. Cek Kunci API
     if (!GEMINI_API_KEY) {
@@ -84,7 +80,6 @@ app.post('/api/gemini-proxy', async (req, res) => {
     // 8.2. Membangun Payload untuk Google API
     let payload = {
         contents: [{ parts: [{ text: prompt }] }],
-        // Mengaktifkan Google Search untuk semua query AI
         tools: [GOOGLE_SEARCH_TOOL],
         systemInstruction: {
              parts: [{ text: "Anda adalah analis saham dan keuangan profesional. Berikan respon yang akurat, berdasarkan data real-time jika memungkinkan, dan patuhi JSON schema yang diberikan." }]
@@ -115,7 +110,6 @@ app.post('/api/gemini-proxy', async (req, res) => {
         if (!geminiResponse.ok) {
             const errorDetails = await geminiResponse.text();
             console.error("Gemini API Error:", errorDetails);
-            // Meneruskan status error dari Google API ke client
             return res.status(geminiResponse.status).json({ 
                 error: 'Gemini API call failed', 
                 details: errorDetails 
@@ -123,8 +117,6 @@ app.post('/api/gemini-proxy', async (req, res) => {
         }
         
         const geminiResult = await geminiResponse.json();
-
-        // 8.4. Ekstraksi konten teks dari respons Gemini
         const textData = geminiResult.candidates?.[0]?.content?.parts?.[0]?.text;
 
         if (!textData) {
@@ -132,7 +124,6 @@ app.post('/api/gemini-proxy', async (req, res) => {
             return res.status(500).json({ error: 'Gemini API call failed: Empty content in response.' });
         }
         
-        // Mengirimkan data dalam format yang diharapkan oleh client: { text: "..." }
         res.json({ text: textData });
 
     } catch (error) {
