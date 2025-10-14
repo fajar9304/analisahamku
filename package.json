@@ -4,6 +4,6 @@
     "express": "^5.1.0",
     "firebase": "^12.1.0",
     "node-cron": "^4.2.1",
-    "node-fetch": "^2.6.1"  <-- WAJIB DITAMBAHKAN
+    "node-fetch": "^2.6.1"
   }
 }
