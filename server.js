@@ -67,9 +67,9 @@ async function generateAndSaveNewToken() {
     }
 }
 
-// 8. API Endpoint untuk PROXY PANGGILAN GEMINI (BARU & PENTING)
-// Endpoint ini menerima prompt dan schema dari aplikasi HTML Anda
-app.post('/gemini-proxy', async (req, res) => {
+// 8. API Endpoint untuk PROXY PANGGILAN GEMINI (PERBAIKAN JALUR!)
+// Jalur diubah dari '/gemini-proxy' menjadi '/api/gemini-proxy'
+app.post('/api/gemini-proxy', async (req, res) => {
     // 8.1. Cek Kunci API
     if (!GEMINI_API_KEY) {
         // Ini hanya terjadi jika Anda lupa mengkonfigurasi Environment Variable di Render
@@ -134,7 +134,6 @@ app.post('/gemini-proxy', async (req, res) => {
         }
         
         // Mengirimkan data dalam format yang diharapkan oleh client: { text: "..." }
-        // Ini memastikan kode di index.html (const textData = result.text;) berfungsi
         res.json({ text: textData });
 
     } catch (error) {
