@@ -1,4 +1,4 @@
-// Server Scraper Saham & Kripto + Gemini Proxy Aman (FINAL v5 - FIX route & fetch)
+// Server Scraper Saham & Kripto + Gemini Proxy (v6 - Stable & Auto-Fallback)
 
 import express from "express";
 import cors from "cors";
@@ -25,12 +25,12 @@ const GEMINI_MODEL = "gemini-2.0-flash";
 const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
 const GOOGLE_SEARCH_TOOL = { google_search: {} };
 
-// === ASSET LIST ===
+// === ASET LIST ===
 const STOCK_TICKERS_FOR_CRON = ["BBCA.JK", "BBRI.JK", "TLKM.JK"];
 const CRYPTO_TICKERS_FOR_CRON = ["BTC-USD", "ETH-USD"];
 const ALL_CRON_TICKERS = [...STOCK_TICKERS_FOR_CRON, ...CRYPTO_TICKERS_FOR_CRON];
 
-// === INIT FIREBASE & SERVER ===
+// === INISIALISASI ===
 const app = express();
 const PORT = process.env.PORT || 3000;
 const firebaseApp = initializeApp(firebaseConfig);
@@ -41,7 +41,7 @@ let currentToken = "";
 app.use(cors());
 app.use(express.json());
 
-// === FIREBASE AUTH ===
+// === FIREBASE LOGIN ANONIM ===
 async function ensureAuth() {
   if (!auth.currentUser) {
     try {
@@ -55,64 +55,75 @@ async function ensureAuth() {
   return true;
 }
 
-// === SCRAPER ===
+// === SCRAPER SAHAM & KRIPTO ===
 async function getAssetPriceData(ticker) {
+  const headers = {
+    "User-Agent":
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
+    Accept: "application/json, text/plain, */*",
+    "Accept-Language": "en-US,en;q=0.9",
+    Connection: "keep-alive",
+  };
+
   try {
-    const headers = { "User-Agent": "Mozilla/5.0" };
-    // 1️⃣ Coba ambil dari Yahoo Finance
-    let response = await fetch(
+    console.log(`🔍 Fetching data untuk ${ticker} dari Yahoo...`);
+    const res = await fetch(
       `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(
         ticker
       )}`,
-      { headers }
+      { headers, timeout: 8000 }
     );
-    const json = await response.json();
-    let result = json?.quoteResponse?.result?.[0];
+    const json = await res.json();
+    const result = json?.quoteResponse?.result?.[0];
 
-    // 2️⃣ Fallback ke CoinGecko jika crypto tidak ditemukan
-    if ((!result || !result.regularMarketPrice) && ticker.endsWith("-USD")) {
+    if (result && result.regularMarketPrice) {
+      console.log(`✅ Data ${ticker} berhasil diambil dari Yahoo.`);
+      return {
+        symbol: result.symbol || ticker,
+        shortName: result.shortName || result.longName || ticker,
+        currency: result.currency || "IDR",
+        regularMarketPrice:
+          result.regularMarketPrice?.raw || result.regularMarketPrice || null,
+        regularMarketChangePercent:
+          result.regularMarketChangePercent?.raw ||
+          result.regularMarketChangePercent ||
+          null,
+      };
+    }
+
+    // === Fallback ke CoinGecko (jika crypto)
+    if (ticker.endsWith("-USD")) {
+      console.log(`⚠️ Yahoo gagal, fallback ke CoinGecko untuk ${ticker}`);
       const coinId = ticker.split("-")[0].toLowerCase();
-      const cg = await fetch(
+      const cgRes = await fetch(
         `https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd`
       );
-      const cgData = await cg.json();
-      if (cgData[coinId]) {
-        result = {
+      const cgJson = await cgRes.json();
+      if (cgJson[coinId]) {
+        return {
           symbol: ticker,
           shortName: coinId.toUpperCase(),
           currency: "USD",
-          regularMarketPrice: cgData[coinId].usd,
+          regularMarketPrice: cgJson[coinId].usd,
           regularMarketChangePercent: null,
         };
       }
     }
 
-    if (!result) return null;
-
-    return {
-      symbol: result.symbol || ticker,
-      shortName: result.shortName || result.longName || ticker,
-      currency: result.currency || "IDR",
-      regularMarketPrice:
-        result.regularMarketPrice?.raw ||
-        result.regularMarketPrice ||
-        null,
-      regularMarketChangePercent:
-        result.regularMarketChangePercent?.raw ||
-        result.regularMarketChangePercent ||
-        null,
-    };
+    // === Jika tidak dapat data sama sekali
+    console.warn(`❌ Tidak ada data ditemukan untuk ${ticker}`);
+    return null;
   } catch (e) {
-    console.error(`❌ Gagal fetch ${ticker}:`, e.message);
+    console.error(`❌ Error fetch ${ticker}:`, e.message);
     return null;
   }
 }
 
-// === AI ANALYSIS ===
+// === ANALISIS AI ===
 async function getAiAnalysis(assetName, isCrypto) {
   const prompt = isCrypto
     ? `Berikan ringkasan singkat (maksimal 2 kalimat) tentang sentimen pasar dan volatilitas terkini untuk aset kripto ${assetName}.`
-    : `Berikan ringkasan singkat (maksimal 2 kalimat) tentang sentimen pasar untuk saham ${assetName}.`;
+    : `Berikan ringkasan singkat (maksimal 2 kalimat) tentang sentimen pasar saat ini untuk saham ${assetName}.`;
 
   try {
     const res = await fetch(GEMINI_API_URL, {
@@ -142,10 +153,8 @@ async function runAnalysisEngine() {
   for (const ticker of ALL_CRON_TICKERS) {
     const isCrypto = ticker.endsWith("-USD");
     const data = await getAssetPriceData(ticker);
-    if (!data) {
-      console.warn(`⚠️ Tidak ada data untuk ${ticker}`);
-      continue;
-    }
+    if (!data) continue;
+
     const ai = await getAiAnalysis(data.shortName, isCrypto);
     const final = {
       ...data,
@@ -185,7 +194,7 @@ async function generateAndSaveNewToken() {
 // === ROUTES ===
 app.get("/", (_, res) => res.send("✅ Server Scraper & Gemini Proxy aktif!"));
 
-// ⬆️ PENTING: letakkan /api/token SEBELUM /api/:symbol
+// ⬆️ Pastikan ini di atas /api/:symbol
 app.get("/api/token", (_, res) => {
   if (!currentToken)
     return res.status(500).json({ error: "Token belum tersedia." });
@@ -202,7 +211,7 @@ app.get("/api/:symbol", async (req, res) => {
   res.json({ ...data, aiAnalysis: ai });
 });
 
-// === START ===
+// === START SERVER ===
 app.listen(PORT, async () => {
   console.log(`✅ Server aktif di port ${PORT}`);
   await ensureAuth();
