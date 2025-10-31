@@ -1,61 +1,53 @@
-// ======================================================
-// 📈 SERVER FINAL: Analisa Saham & Kripto (Yahoo + Gemini + Firebase)
-// ======================================================
+// Server Scraper Saham & Kripto + Gemini Proxy Aman (FINAL v4 - Sinkron Firebase Config)
 
-const express = require('express');
-const cors = require('cors');
-const cron = require('node-cron');
-const fetch = require('node-fetch');
-const { initializeApp } = require('firebase/app');
-const { getDatabase, ref, set, remove } = require('firebase/database');
-const { getAuth, signInAnonymously } = require('firebase/auth');
+import express from "express";
+import cors from "cors";
+import cron from "node-cron";
+import fetch from "node-fetch";
+import { initializeApp } from "firebase/app";
+import { getAuth, signInAnonymously } from "firebase/auth";
+import { getDatabase, ref, set, remove } from "firebase/database";
 
-// ------------------------------------------------------
-// 🔐 KONFIGURASI
-// ------------------------------------------------------
-
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_MODEL = 'gemini-2.5-flash-preview-09-2025';
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
-const GOOGLE_SEARCH_TOOL = { "google_search": {} };
-
-const STOCK_TICKERS_FOR_CRON = ['BBCA.JK', 'BBRI.JK', 'TLKM.JK'];
-const CRYPTO_TICKERS_FOR_CRON = ['BTC-USD', 'ETH-USD'];
-const ALL_CRON_TICKERS = [...STOCK_TICKERS_FOR_CRON, ...CRYPTO_TICKERS_FOR_CRON];
-
+// === KONFIGURASI FIREBASE (DARI CONFIG TERBARU KAMU) ===
 const firebaseConfig = {
   apiKey: "AIzaSyCCV7FD5FQqVW1WnP-Zu6UWAhAz19dthso",
   authDomain: "analisahamku.firebaseapp.com",
+  databaseURL: "https://analisahamku-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "analisahamku",
-  storageBucket: "analisahamku.appspot.com",
+  storageBucket: "analisahamku.firebasestorage.app",
   messagingSenderId: "503947258604",
-  appId: "1:503947258604:web:f5b10c998ce395405413c9",
-  databaseURL: "https://analisahamku-default-rtdb.asia-southeast1.firebasedatabase.app"
+  appId: "1:503947258604:web:f5b10c998ce395405413c9"
 };
 
-// ------------------------------------------------------
-// 🧠 INISIALISASI
-// ------------------------------------------------------
+// === KONFIGURASI MODEL AI ===
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_MODEL = "gemini-2.0-flash";
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+const GOOGLE_SEARCH_TOOL = { google_search: {} };
 
+// === DAFTAR ASET ===
+const STOCK_TICKERS_FOR_CRON = ["BBCA.JK", "BBRI.JK", "TLKM.JK"];
+const CRYPTO_TICKERS_FOR_CRON = ["BTC-USD", "ETH-USD"];
+const ALL_CRON_TICKERS = [...STOCK_TICKERS_FOR_CRON, ...CRYPTO_TICKERS_FOR_CRON];
+
+// === INISIALISASI FIREBASE & SERVER ===
 const app = express();
 const PORT = process.env.PORT || 3000;
 const firebaseApp = initializeApp(firebaseConfig);
 const database = getDatabase(firebaseApp);
 const auth = getAuth(firebaseApp);
-let currentToken = '';
 
 app.use(cors());
 app.use(express.json());
 
-// ------------------------------------------------------
-// 🔐 FUNGSI AUTHENTIKASI ANONIM
-// ------------------------------------------------------
+let currentToken = "";
 
+// === AUTENTIKASI FIREBASE (LOGIN ANONIM SERVER) ===
 async function ensureAuth() {
   if (!auth.currentUser) {
     try {
       await signInAnonymously(auth);
-      console.log("✅ Server: Login anonim Firebase berhasil.");
+      console.log("✅ Firebase login anonim berhasil.");
     } catch (e) {
       console.error("❌ Gagal login anonim Firebase:", e.message);
       return false;
@@ -64,211 +56,183 @@ async function ensureAuth() {
   return true;
 }
 
-// ------------------------------------------------------
-// 💹 FUNGSI SCRAPER DATA HARGA (Yahoo v7)
-// ------------------------------------------------------
-
+// === SCRAPER SAHAM & CRYPTO ===
 async function getAssetPriceData(ticker) {
   try {
-    const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(ticker)}`;
-    const response = await fetch(url, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-        "Accept": "application/json, text/plain, */*",
-        "Accept-Language": "en-US,en;q=0.9",
-      },
-    });
+    const headers = {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+      Accept: "application/json, text/plain, */*",
+    };
+
+    // 1️⃣ Coba ambil dari Yahoo Finance (v7)
+    let response = await fetch(
+      `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(
+        ticker
+      )}`,
+      { headers }
+    );
 
     if (!response.ok) {
-      console.error(`❌ HTTP ${response.status} untuk ${ticker}`);
-      return null;
+      console.warn(`⚠️ Yahoo v7 gagal (${response.status}), coba fallback...`);
+      response = await fetch(
+        `https://query2.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(
+          ticker
+        )}?modules=price`,
+        { headers }
+      );
     }
 
     const json = await response.json();
-    const result = json?.quoteResponse?.result?.[0];
-    if (!result) return null;
+    let result =
+      json?.quoteResponse?.result?.[0] ||
+      json?.quoteSummary?.result?.[0]?.price ||
+      null;
+
+    // 2️⃣ Jika crypto dan tidak ada data di Yahoo → fallback ke CoinGecko
+    if (!result && ticker.endsWith("-USD")) {
+      const coinId = ticker.split("-")[0].toLowerCase();
+      const cgRes = await fetch(
+        `https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd`
+      );
+      const cgJson = await cgRes.json();
+      const price = cgJson[coinId]?.usd;
+      if (price) {
+        result = {
+          symbol: ticker,
+          shortName: coinId.toUpperCase(),
+          currency: "USD",
+          regularMarketPrice: price,
+        };
+      }
+    }
+
+    if (!result) {
+      console.warn(`⚠️ Tidak ada data untuk ${ticker}`);
+      return null;
+    }
 
     return {
-      symbol: result.symbol,
-      shortName: result.shortName || result.longName || result.symbol,
-      currency: result.currency,
-      regularMarketPrice: result.regularMarketPrice ?? null,
-      regularMarketChangePercent: result.regularMarketChangePercent ?? null,
+      symbol: result.symbol || ticker,
+      shortName: result.shortName || result.longName || ticker,
+      currency: result.currency || "IDR",
+      regularMarketPrice:
+        result.regularMarketPrice?.raw ||
+        result.regularMarketPrice ||
+        result.regularMarketLastPrice?.raw ||
+        result.regularMarketLastPrice ||
+        null,
+      regularMarketChangePercent:
+        result.regularMarketChangePercent?.raw ||
+        result.regularMarketChangePercent ||
+        null,
     };
   } catch (error) {
-    console.error(`⚠️ Gagal ambil data harga ${ticker}:`, error.message);
+    console.error(`❌ Gagal ambil data ${ticker}:`, error.message);
     return null;
   }
 }
 
-// ------------------------------------------------------
-// 🤖 FUNGSI ANALISIS GEMINI (via Proxy Internal)
-// ------------------------------------------------------
-
-async function getAiAnalysisViaProxy(assetName, isCrypto) {
+// === ANALISIS AI ===
+async function getAiAnalysis(assetName, isCrypto) {
   const prompt = isCrypto
-    ? `Berikan ringkasan singkat (maksimal 2 kalimat) mengenai sentimen pasar dan volatilitas saat ini untuk aset crypto ${assetName}.`
-    : `Berikan ringkasan singkat (maksimal 2 kalimat) mengenai sentimen pasar saat ini untuk saham ${assetName}.`;
+    ? `Berikan ringkasan singkat (maksimal 2 kalimat) tentang sentimen pasar dan volatilitas terkini untuk aset kripto ${assetName}.`
+    : `Berikan ringkasan singkat (maksimal 2 kalimat) tentang sentimen pasar saat ini untuk saham ${assetName}.`;
 
   try {
-    const response = await fetch(`http://localhost:${PORT}/api/gemini-proxy`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-auth-token': currentToken },
-      body: JSON.stringify({ prompt }),
+    const payload = {
+      contents: [{ parts: [{ text: prompt }] }],
+      tools: [GOOGLE_SEARCH_TOOL],
+    };
+
+    const res = await fetch(GEMINI_API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`❌ Proxy error (${response.status}):`, errorText);
-      return "Analisis AI tidak tersedia.";
-    }
-
-    const data = await response.json();
-    return data.text || "Tidak ada analisis.";
+    const data = await res.json();
+    return (
+      data.candidates?.[0]?.content?.parts?.[0]?.text ||
+      "Analisis AI tidak tersedia."
+    );
   } catch (error) {
-    console.error("⚠️ Error AI Proxy:", error.message);
-    return "Gagal memuat analisis AI.";
+    console.error("❌ Gagal analisis AI:", error.message);
+    return "Analisis AI gagal dimuat.";
   }
 }
 
-// ------------------------------------------------------
-// ⚙️ ENGINE UTAMA ANALISIS
-// ------------------------------------------------------
-
+// === ENGINE UTAMA ===
 async function runAnalysisEngine() {
-  console.log(`[${new Date().toLocaleString('id-ID')}] ▶️ Menjalankan engine analisis...`);
-
-  if (!await ensureAuth()) return;
+  console.log(`🚀 Jalankan analisis otomatis ${new Date().toLocaleString()}`);
+  if (!(await ensureAuth())) return;
 
   for (const ticker of ALL_CRON_TICKERS) {
-    const isCrypto = ticker.endsWith('-USD');
-    const priceData = await getAssetPriceData(ticker);
-    if (!priceData) {
-      console.warn(`⚠️ Data ${ticker} kosong, lewati.`);
-      continue;
-    }
+    const isCrypto = ticker.endsWith("-USD");
+    const data = await getAssetPriceData(ticker);
+    if (!data) continue;
 
-    const aiSummary = await getAiAnalysisViaProxy(priceData.shortName, isCrypto);
-
-    const combinedData = {
-      ...priceData,
-      aiAnalysis: aiSummary,
-      lastUpdated: new Date().toISOString()
+    const ai = await getAiAnalysis(data.shortName, isCrypto);
+    const final = {
+      ...data,
+      aiAnalysis: ai,
+      lastUpdated: new Date().toISOString(),
     };
 
     try {
-      const dbRef = ref(database, 'stock_analysis/' + ticker.replace('.', '_').replace('-', '_'));
-      await set(dbRef, combinedData);
-      console.log(`✅ ${ticker} disimpan ke Firebase.`);
-    } catch (error) {
-      console.error(`❌ Gagal simpan ${ticker}:`, error.message);
+      const safePath = ticker.replace(".", "_").replace("-", "_");
+      await set(ref(database, `stock_analysis/${safePath}`), final);
+      console.log(`✅ ${ticker} berhasil disimpan ke RTDB.`);
+    } catch (e) {
+      console.error(`❌ Gagal simpan ${ticker}:`, e.message);
     }
   }
 
-  console.log("✅ Siklus analisis selesai.");
+  console.log("♻️ Siklus analisis selesai.");
 }
 
-// ------------------------------------------------------
-// 🔑 TOKEN MANAGEMENT
-// ------------------------------------------------------
-
+// === TOKEN MANAGEMENT ===
 async function generateAndSaveNewToken() {
-  if (!await ensureAuth()) return;
+  if (!(await ensureAuth())) return;
 
   const oldToken = currentToken;
   const newToken = Math.floor(100000 + Math.random() * 900000).toString();
   currentToken = newToken;
 
   try {
-    const tokenRef = ref(database, 'tokens/' + currentToken);
+    const tokenRef = ref(database, "tokens/" + currentToken);
     await set(tokenRef, { createdAt: new Date().toISOString() });
+    console.log(`🔑 Token baru: ${currentToken}`);
 
-    console.log(`🔐 Token baru ${currentToken} tersimpan di Firebase.`);
-
-    if (oldToken) {
-      const oldTokenRef = ref(database, 'tokens/' + oldToken);
-      await remove(oldTokenRef);
-      console.log(`🗑️ Token lama ${oldToken} dihapus.`);
-    }
+    if (oldToken) await remove(ref(database, "tokens/" + oldToken));
   } catch (e) {
-    console.error("❌ Gagal simpan token:", e.message);
+    console.error("❌ Gagal menyimpan token:", e.message);
   }
 }
 
-// ------------------------------------------------------
-// 🌐 API ROUTES
-// ------------------------------------------------------
+// === ENDPOINTS ===
+app.get("/", (_, res) => res.send("✅ Server Scraper & Gemini Proxy aktif!"));
+app.get("/api/token", (_, res) => res.json({ token: currentToken }));
 
-app.get("/", (req, res) => res.send("✅ Server Scraper & Gemini Proxy aktif!"));
-
-// ✅ Endpoint ambil token aktif
-app.get('/api/get-token', (req, res) => {
-  if (!currentToken) return res.status(500).json({ error: 'Token belum tersedia di server.' });
-  res.json({ token: currentToken });
-});
-
-// ✅ Endpoint ambil data saham/kripto real-time
 app.get("/api/:symbol", async (req, res) => {
   const { symbol } = req.params;
-  const isCrypto = symbol.endsWith('-USD');
-  const priceData = await getAssetPriceData(symbol);
+  const isCrypto = symbol.endsWith("-USD");
+  const data = await getAssetPriceData(symbol);
 
-  if (!priceData) return res.status(404).json({ error: `Data tidak ditemukan: ${symbol}` });
+  if (!data)
+    return res.status(404).json({ error: `Data tidak ditemukan: ${symbol}` });
 
-  const aiSummary = await getAiAnalysisViaProxy(priceData.shortName, isCrypto);
-
-  res.json({
-    ...priceData,
-    companyName: priceData.shortName,
-    aiAnalysis: aiSummary,
-    chart: { result: [{ meta: { regularMarketPrice: priceData.regularMarketPrice } }] }
-  });
+  const ai = await getAiAnalysis(data.shortName, isCrypto);
+  res.json({ ...data, aiAnalysis: ai });
 });
 
-// ✅ Endpoint Gemini Proxy
-app.post('/api/gemini-proxy', async (req, res) => {
-  const clientToken = req.headers['x-auth-token'];
-  if (!clientToken || clientToken !== currentToken)
-    return res.status(401).json({ error: "Unauthorized: Missing or invalid token." });
-
-  if (!GEMINI_API_KEY)
-    return res.status(500).json({ error: 'GEMINI_API_KEY not configured.' });
-
-  const { prompt } = req.body;
-  if (!prompt) return res.status(400).json({ error: 'Prompt is required.' });
-
-  const payload = {
-    contents: [{ parts: [{ text: prompt }] }],
-    tools: [GOOGLE_SEARCH_TOOL]
-  };
-
-  try {
-    const geminiResponse = await fetch(GEMINI_API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    const geminiResult = await geminiResponse.json();
-    const textData = geminiResult.candidates?.[0]?.content?.parts?.[0]?.text;
-    res.json({ text: textData || "Tidak ada analisis." });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-// ------------------------------------------------------
-// 🕐 JADWAL & START SERVER
-// ------------------------------------------------------
-
+// === SERVER START ===
 app.listen(PORT, async () => {
-  console.log(`🚀 Server berjalan di port ${PORT}`);
+  console.log(`✅ Server aktif di port ${PORT}`);
   await ensureAuth();
   await generateAndSaveNewToken();
   await runAnalysisEngine();
 
-  cron.schedule('*/30 * * * *', generateAndSaveNewToken);
-  cron.schedule('0 * * * *', runAnalysisEngine);
-
-  console.log("⏱️ Cron aktif: Token (30m), Analisis (1h)");
+  cron.schedule("*/30 * * * *", generateAndSaveNewToken); // token tiap 30 menit
+  cron.schedule("0 * * * *", runAnalysisEngine); // analisis tiap jam
+  console.log("🕒 Penjadwal aktif: token (30m) dan analisis (1h).");
 });
