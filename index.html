@@ -119,7 +119,7 @@
             color: #60a5fa;
         }
         
-        /* Styles for Education Module (No longer used, but keeping definition block for now) */
+        /* Styles for Education Module */
         .lesson-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
         .lesson-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
         .glossary-btn.active { background-color: #3b82f6; color: white; transform: scale(1.1); }
@@ -178,9 +178,18 @@
                     <button type="submit" id="register-button" class="w-full bg-white hover:bg-gray-200 text-blue-600 font-bold py-3 px-4 rounded-full transition-colors duration-300 text-lg">Daftar</button>
                 </form>
             </div>
+
+            <!-- BARU: TAMPILAN STATUS PENDING -->
+            <div id="pending-form" class="hidden text-center text-white">
+                <h1 class="text-3xl font-bold mb-4">Pendaftaran Berhasil</h1>
+                <p class="text-blue-200 mb-6">Akun Anda (<span id="pending-email" class="font-bold"></span>) sedang menunggu persetujuan admin.</p>
+                <p class="text-blue-200 mb-8">Silakan hubungi admin untuk verifikasi. Anda akan diizinkan masuk setelah akun Anda disetujui.</p>
+                <button id="pending-logout-button" class="w-full bg-white/20 hover:bg-white/30 border border-white/30 text-white font-bold py-3 px-4 rounded-full transition-colors duration-300 text-lg">Keluar</button>
+            </div>
+            <!-- AKHIR BARU -->
         </div>
         
-        <p class="text-center text-blue-200 text-xs mt-6">
+        <p id="auth-switch-container" class="text-center text-blue-200 text-xs mt-6"> <!-- ID BARU DITAMBAHKAN -->
             <span id="auth-switch-text">Belum punya akun?</span>
             <button id="auth-switch-button" class="font-bold hover:underline transition-colors duration-200">Daftar Sekarang</button>
         </p>
@@ -197,6 +206,12 @@
                         <p id="header-subtitle" class="mt-1 text-blue-200 text-center sm:text-left">Selamat datang kembali!</p>
                     </div>
                     <div class="flex items-center gap-4">
+                        <!-- START: MODIFIKASI HEADER (Menambahkan Market Mode Select) -->
+                        <select id="market-mode-select" class="bg-white/20 hover:bg-white/30 text-white font-bold py-2 px-3 rounded-full transition-colors duration-300 text-sm">
+                            <option value="stock">Saham (BEI)</option>
+                            <option value="crypto">Kripto (Global)</option>
+                        </select>
+                        <!-- END: MODIFIKASI HEADER -->
                         <label for="dark-mode-toggle" class="relative">
                             <input type="checkbox" id="dark-mode-toggle" class="toggle-checkbox">
                             <div class="toggle-switch">
@@ -366,12 +381,17 @@
                                     <label for="manual-portfolio-name" class="block mb-2 text-sm font-medium">Nama Portofolio</label>
                                     <input type="text" id="manual-portfolio-name" class="strategy-input bg-gray-100 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Contoh: Portofolio Jangka Panjang">
                                 </div>
-                                <!-- START: NEW MANUAL CAPITAL INPUT -->
+                                <!-- MODIFIED: Tambahkan tooltip penjelasan Lot -->
                                 <div class="mb-4">
-                                    <label for="manual-virtual-capital" class="block mb-2 text-sm font-medium">Modal Virtual (Rp)</label>
+                                    <label for="manual-virtual-capital" class="block mb-2 text-sm font-medium flex items-center gap-2">
+                                        Modal Virtual (Rp) 
+                                        <button type="button" class="text-blue-500 hover:text-blue-600" onclick="showLotInfoModal()">
+                                            <ion-icon name="information-circle-outline"></ion-icon>
+                                        </button>
+                                    </label>
                                     <input type="text" id="manual-virtual-capital" class="strategy-input bg-gray-100 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Contoh: 10.000.000" value="10.000.000">
                                 </div>
-                                <!-- END: NEW MANUAL CAPITAL INPUT -->
+                                <!-- END MODIFIED -->
                                 <div id="manual-portfolio-input-rows" class="space-y-3 mb-4">
                                     <div class="flex items-center gap-2">
                                         <input type="text" class="portfolio-ticker strategy-input uppercase bg-gray-100 border border-gray-300 text-sm rounded-lg block w-full p-2.5" placeholder="Ticker Saham (Contoh: BBCA)">
@@ -427,7 +447,7 @@
                         <div id="direct-analysis-sub-content">
                             <!-- START: BLOK PENCARIAN DIPINDAHKAN KE ATAS DAN SELALU TERLIHAT -->
                             <div class="mt-4 mb-8 max-w-lg mx-auto">
-                                <label for="direct-analysis-input" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Analisis Saham Secara Langsung</label>
+                                <label for="direct-analysis-input" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" id="direct-analysis-label">Analisis Saham Secara Langsung</label>
                                 <div class="mt-1 flex rounded-full shadow-md">
                                     <input type="text" id="direct-analysis-input" class="w-full uppercase bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 rounded-l-full p-3 focus:ring-blue-500 focus:border-blue-500" placeholder="Masukkan Ticker (Contoh: BBCA)">
                                     <button id="direct-analysis-btn" class="bg-blue-600 text-white px-6 rounded-r-full hover:bg-blue-700 flex items-center justify-center transition-colors">
@@ -452,12 +472,12 @@
                                     <div class="lg:col-span-1 space-y-6">
                                         <div class="card p-4">
                                             <h3 class="text-xl font-semibold mb-4">Proyeksi Harga</h3>
-                                            <div id="projection-container"></div>
+                                            <div id="projection-container"><div class="flex justify-center p-4"><div class="loader"></div></div></div>
                                         </div>
                                         <div class="card p-4">
                                             <h3 class="text-xl font-semibold mb-4">Profil & Fundamental</h3>
-                                            <div id="company-profile-container"></div>
-                                            <div id="fundamental-data-container"></div>
+                                            <div id="company-profile-container"><div class="flex justify-center p-4"><div class="loader"></div></div></div>
+                                            <div id="fundamental-data-container" class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700"><div class="flex justify-center p-4"><div class="loader"></div></div></div>
                                         </div>
                                     </div>
                                 </div>
@@ -478,17 +498,27 @@
                                         </button>
                                     </div>
                                 </div>
-                                
-                                <!-- BLOK DEBAT AI TELAH DIHAPUS -->
 
+                                <div class="mt-6 card p-6">
+                                    <h3 class="text-2xl font-bold text-center mb-4">Debat Bull vs. Bear</h3>
+                                    <div id="debate-results-container" class="text-center text-gray-500 dark:text-gray-400">
+                                        <p>Dapatkan dua sisi argumen dari AI untuk membuat keputusan yang lebih matang.</p>
+                                    </div>
+                                    <div class="text-center mt-6">
+                                        <button id="start-debate-btn" class="bg-gradient-to-r from-orange-500 to-red-600 hover:opacity-90 text-white font-bold py-3 px-8 rounded-full transition-opacity duration-300 inline-flex items-center justify-center text-lg">
+                                            <ion-icon name="git-compare-outline" class="mr-2"></ion-icon>
+                                            Mulai Debat AI
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
                         <!-- FITUR BARU: Konten untuk Bandingkan Saham -->
                         <div id="compare-stocks-sub-content" class="hidden">
                             <div class="card p-6 mb-8">
-                                <h2 class="text-xl font-bold text-center mb-2">Bandingkan Saham</h2>
-                                <p class="text-center text-gray-500 dark:text-gray-400 mb-6">Masukkan 2 atau 3 ticker saham untuk melihat perbandingan fundamental dan analisis AI.</p>
+                                <h2 class="text-xl font-bold text-center mb-2" id="compare-stocks-title">Bandingkan Saham</h2>
+                                <p class="text-center text-gray-500 dark:text-gray-400 mb-6" id="compare-stocks-subtitle">Masukkan 2 atau 3 ticker saham untuk melihat perbandingan fundamental dan analisis AI.</p>
                                 <div id="compare-inputs-container" class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                                     <input type="text" class="compare-input uppercase bg-gray-100 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Ticker 1 (Contoh: BBCA)">
                                     <input type="text" class="compare-input uppercase bg-gray-100 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Ticker 2 (Contoh: BBRI)">
@@ -505,7 +535,9 @@
                     </div>
                 </div>
 
-                <!-- Modul Edukasi Dihapus -->
+                <div id="education-tab-content" class="hidden">
+                    <div id="education-app" class="container mx-auto max-w-5xl"></div>
+                </div>
 
             </main>
         </div>
@@ -534,10 +566,9 @@
     <div id="modal-container"></div>
 
     <script type="module">
-        // PENTING: Mengganti impor RTDB dengan Firestore
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, collection, query, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getDatabase, ref, get, set, push, remove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
         
         // Konstanta Global yang sudah tersedia
         const __firebase_config = '{"apiKey":"AIzaSyCCV7FD5FQqVW1WnP-Zu6UWAhAz19dthso","authDomain":"analisahamku.firebaseapp.com","projectId":"analisahamku","storageBucket":"analisahamku.appspot.com","messagingSenderId":"503947258604","appId":"1:503947258604:web:f5b10c998ce395405413c9","databaseURL":"https://analisahamku-default-rtdb.asia-southeast1.firebasedatabase.app"}';
@@ -545,8 +576,7 @@
         
         const firebaseConfig = JSON.parse(__firebase_config);
         const app = initializeApp(firebaseConfig);
-        // Mengganti getDatabase(app) dengan getFirestore(app)
-        const db = getFirestore(app); 
+        const database = getDatabase(app);
         const auth = getAuth(app);
         
         const loginPage = document.getElementById('login-page');
@@ -595,12 +625,21 @@
 
         loginFormContent.addEventListener('submit', async (e) => {
             e.preventDefault();
+            
+            // BARU: Tambahkan State Loading
+            const loginButton = document.getElementById('login-button');
+            const originalButtonText = loginButton.innerHTML;
+            loginButton.disabled = true;
+            loginButton.innerHTML = `<div class="flex justify-center items-center gap-2"><div class="mini-loader" style="border-left-color: #3b82f6;"></div><span>Masuk...</span></div>`;
+            // AKHIR BARU
+            
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             authError.classList.add('hidden');
             
             try {
                 await signInWithEmailAndPassword(auth, email, password);
+                // Biarkan tombol disabled, onAuthStateChanged akan mengambil alih
             } catch (error) {
                 let errorMessage = "Gagal masuk. Periksa email atau kata sandi Anda.";
                 if (error.code === 'auth/user-not-found') {
@@ -610,11 +649,24 @@
                 }
                 authError.textContent = errorMessage;
                 authError.classList.remove('hidden');
+                
+                // BARU: Kembalikan tombol jika error
+                loginButton.disabled = false;
+                loginButton.innerHTML = originalButtonText;
+                // AKHIR BARU
             }
         });
         
         registerFormContent.addEventListener('submit', async (e) => {
             e.preventDefault();
+            
+            // BARU: Tambahkan State Loading
+            const registerButton = document.getElementById('register-button');
+            const originalButtonText = registerButton.innerHTML;
+            registerButton.disabled = true;
+            registerButton.innerHTML = `<div class="flex justify-center items-center gap-2"><div class="mini-loader" style="border-left-color: #3b82f6;"></div><span>Mendaftar...</span></div>`;
+            // AKHIR BARU
+            
             const name = document.getElementById('reg-name').value;
             const email = document.getElementById('reg-email').value;
             const password = document.getElementById('reg-password').value;
@@ -630,9 +682,19 @@
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
-                // [FIRESTORE]: Menyimpan profil pengguna di koleksi 'users'
-                const userProfileDocRef = doc(db, 'users', user.uid);
-                await setDoc(userProfileDocRef, { name: name, email: email, createdAt: new Date().toISOString() });
+                
+                // MODIFIKASI: Simpan profil DAN status
+                const userRef = ref(database, `users/${user.uid}`);
+                await set(userRef, { 
+                    profile: { 
+                        name: name, 
+                        email: email 
+                    },
+                    status: "pending" // <-- INI DIA PERUBAHAN UTAMANYA
+                });
+                
+                // Setelah pendaftaran berhasil, pengguna akan langsung masuk
+                // dan onAuthStateChanged akan menangani status "pending" mereka.
             } catch (error) {
                 let errorMessage = "Pendaftaran gagal. Coba lagi.";
                 if (error.code === 'auth/email-already-in-use') {
@@ -642,6 +704,11 @@
                 }
                 authError.textContent = errorMessage;
                 authError.classList.remove('hidden');
+                
+                // BARU: Kembalikan tombol jika error
+                registerButton.disabled = false;
+                registerButton.innerHTML = originalButtonText;
+                // AKHIR BARU
             }
         });
 
@@ -663,30 +730,134 @@
             }
         });
 
+        // MODIFIKASI BESAR: Logika "Gatekeeper"
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                loginPage.classList.add('hidden');
-                appPage.classList.remove('hidden');
+                // Pengguna sudah login, CEK STATUS MEREKA
                 const userId = user.uid;
-                initializeStockApp(userId);
+                // MODIFIKASI: Ambil seluruh data pengguna, bukan hanya status
+                const userRef = ref(database, `users/${userId}`);
+                
+                let status = null;
+                let expiresAt = null; // BARU: Variabel untuk menyimpan waktu kedaluwarsa
+
+                try {
+                    const snapshot = await get(userRef);
+                    if (snapshot.exists()) {
+                        const userData = snapshot.val();
+                        status = userData.status;
+                        expiresAt = userData.expiresAt || null; // Ambil expiresAt, default ke null
+                    }
+                } catch (error) {
+                    console.error("Gagal mengambil status pengguna:", error);
+                    status = "error"; // Asumsikan error jika gagal fetch
+                }
+
+                if (status === "verified") {
+                    // --- KASUS 1: DISETUJUI ---
+                    
+                    // BARU: Periksa tanggal kedaluwarsa
+                    const isLifetime = (expiresAt === null);
+                    const isExpired = (!isLifetime && Date.now() > expiresAt);
+
+                    if (isLifetime || !isExpired) {
+                        // KASUS 1A: Akses Diberikan (Lifetime atau Belum Kedaluwarsa)
+                        loginPage.classList.add('hidden');
+                        appPage.classList.remove('hidden');
+                        initializeStockApp(userId);
+
+                    } else if (isExpired) {
+                        // KASUS 1B: Kedaluwarsa
+                        // Set status mereka kembali ke 'pending' agar admin bisa approve lagi
+                        await set(ref(database, `users/${userId}/status`), "pending");
+
+                        // Tampilkan form login, sembunyikan pending/register
+                        setAuthMode('login'); 
+                        document.getElementById('auth-switch-container').classList.remove('hidden');
+                        document.getElementById('pending-form').classList.add('hidden');
+                        
+                        // Tampilkan error kedaluwarsa
+                        authError.textContent = "Akses Anda telah kedaluwarsa. Silakan hubungi admin.";
+                        authError.classList.remove('hidden');
+                        
+                        // Log out pengguna
+                        await auth.signOut();
+                    }
+
+                } else if (status === "pending") {
+                    // --- KASUS 2: PENDING ---
+                    loginPage.classList.remove('hidden'); // Tampilkan halaman login
+                    appPage.classList.add('hidden'); // Sembunyikan aplikasi
+                    
+                    // Sembunyikan form login/register dan tombol switch
+                    loginForm.classList.add('hidden');
+                    registerForm.classList.add('hidden');
+                    document.getElementById('auth-switch-container').classList.add('hidden');
+                    authError.classList.add('hidden');
+                    
+                    // Tampilkan pesan "Pending"
+                    const pendingForm = document.getElementById('pending-form');
+                    pendingForm.classList.remove('hidden');
+                    document.getElementById('pending-email').textContent = user.email;
+                    
+                    // Tambahkan listener ke tombol logout di-sini
+                    // Kita perlu clone dan replace untuk memastikan listener lama terhapus
+                    const pendingLogoutBtn = document.getElementById('pending-logout-button');
+                    pendingLogoutBtn.replaceWith(pendingLogoutBtn.cloneNode(true));
+                    document.getElementById('pending-logout-button').addEventListener('click', () => {
+                        auth.signOut();
+                    });
+
+                } else {
+                    // --- KASUS 3: DITOLAK / ERROR / BELUM ADA STATUS ---
+                    // Asumsikan semua status lain tidak boleh masuk.
+                    // Tampilkan pesan error di halaman login dan log out.
+                    
+                    // Tampilkan form login, sembunyikan pending/register
+                    setAuthMode('login'); 
+                    document.getElementById('auth-switch-container').classList.remove('hidden');
+                    document.getElementById('pending-form').classList.add('hidden');
+                    
+                    // Tampilkan error
+                    let errorMessage = "Akun Anda belum terverifikasi oleh admin.";
+                    if (status === "error") {
+                        errorMessage = "Gagal memverifikasi status akun Anda. Coba lagi.";
+                    } else if (status === "rejected") {
+                        errorMessage = "Pendaftaran Anda ditolak.";
+                    }
+                    
+                    authError.textContent = errorMessage;
+                    authError.classList.remove('hidden');
+                    
+                    // Log out pengguna agar tidak terjebak
+                    await auth.signOut();
+                }
+
             } else {
+                // --- KASUS 4: TIDAK ADA PENGGUNA (LOGGED OUT) ---
                 loginPage.classList.remove('hidden');
                 appPage.classList.add('hidden');
+                
+                // Pastikan UI login dalam keadaan normal (form login terlihat)
+                setAuthMode('login');
+                document.getElementById('auth-switch-container').classList.remove('hidden');
+                document.getElementById('pending-form').classList.add('hidden');
             }
         });
 
         function initializeStockApp(userId) {
             const logoutButton = document.getElementById('logout-button');
             const darkModeToggle = document.getElementById('dark-mode-toggle');
+            const marketModeSelect = document.getElementById('market-mode-select'); // NEW ID
             const htmlTag = document.documentElement;
             
             let currentAnalysisTicker = null;
-            let selectedInvestor = null;
-            let displayedIpoCount = 0;
-            const ipoBatchSize = 4;
-            let watchlist = [];
-
-            function setDarkMode(isDark) {
+        let currentMarketMode = marketModeSelect.value; // NEW VARIABLE
+        let selectedInvestor = null;
+        let displayedIpoCount = 0;
+        const ipoBatchSize = 4;
+        
+        function setDarkMode(isDark) {
                 if (isDark) {
                     htmlTag.classList.add('dark');
                     document.body.classList.add('dark');
@@ -696,6 +867,7 @@
                 }
                 localStorage.setItem('darkMode', isDark);
                 if (currentAnalysisTicker && document.getElementById('technical-chart-container').offsetParent !== null) {
+                    // Update widget saat mode berubah (jika widget aktif)
                     displayTradingViewWidget(currentAnalysisTicker, 'technical-chart-container');
                 }
             }
@@ -710,6 +882,66 @@
             darkModeToggle.addEventListener('change', () => {
                 setDarkMode(darkModeToggle.checked);
             });
+            
+            // START: LOGIKA BARU UNTUK SWITCH MODE PASAR
+            function updateMarketMode(newMode) {
+                currentMarketMode = newMode;
+                marketModeSelect.value = newMode; // Ensure select box matches state
+                localStorage.setItem('marketMode', newMode);
+                
+                // Panggil fungsi UI update
+                updateMarketUI(newMode);
+                
+                // Bersihkan tampilan jika di tab analisis dan ganti mode
+                if (currentAnalysisTicker && document.getElementById('analysis-tab-content').offsetParent !== null) {
+                    currentAnalysisTicker = null; // Reset current ticker
+                    analysisPlaceholder.classList.remove('hidden');
+                    analysisResultsContainer.classList.add('hidden');
+                }
+            }
+
+            function updateMarketUI(mode) {
+                const isCrypto = mode === 'crypto';
+                
+                // 1. Update Teks Tampilan
+                document.getElementById('direct-analysis-label').textContent = isCrypto ? 'Analisis Kripto Secara Langsung' : 'Analisis Saham Secara Langsung';
+                document.getElementById('direct-analysis-input').placeholder = isCrypto ? 'Masukkan Ticker Kripto (Contoh: BTC-USD)' : 'Masukkan Ticker Saham (Contoh: BBCA)';
+                document.getElementById('compare-stocks-title').textContent = isCrypto ? 'Bandingkan Kripto' : 'Bandingkan Saham';
+                document.getElementById('compare-stocks-subtitle').textContent = isCrypto ? 'Masukkan 2 atau 3 ticker kripto untuk melihat perbandingan dan analisis AI.' : 'Masukkan 2 atau 3 ticker saham untuk melihat perbandingan fundamental dan analisis AI.';
+                
+                // 2. Tampilkan/Sembunyikan Tab Khusus Saham
+                document.querySelector('[data-target="ipo-analysis-sub-content"]').closest('button').classList.toggle('hidden', isCrypto);
+                
+                // 3. Update Placeholder Input Bandingkan
+                document.querySelectorAll('.compare-input').forEach((input, index) => {
+                    if (isCrypto) {
+                        input.placeholder = (index === 0) ? 'Ticker 1 (Contoh: BTC-USD)' : ((index === 1) ? 'Ticker 2 (Contoh: ETH-USD)' : 'Ticker 3 (Opsional)');
+                    } else {
+                        input.placeholder = (index === 0) ? 'Ticker 1 (Contoh: BBCA)' : ((index === 1) ? 'Ticker 2 (Contoh: BBRI)' : 'Ticker 3 (Opsional)');
+                    }
+                });
+                
+                // 4. Perbarui Label Modal Virtual
+                const lotLabel = document.querySelector('#manual-portfolio-sub-content label[for="manual-virtual-capital"]');
+                if (lotLabel) {
+                    const infoButton = lotLabel.querySelector('button');
+                    lotLabel.innerHTML = isCrypto 
+                        ? 'Modal Virtual (Rp)' 
+                        : 'Modal Virtual (Rp) ';
+                    if (infoButton && !isCrypto) {
+                         lotLabel.appendChild(infoButton); // Hanya tampilkan Lot info di mode Saham
+                    }
+                }
+            }
+            
+            marketModeSelect.addEventListener('change', (e) => {
+                updateMarketMode(e.target.value);
+            });
+            
+            // Set initial mode from localStorage or default
+            const initialMarketMode = localStorage.getItem('marketMode') || 'stock';
+            updateMarketMode(initialMarketMode);
+            // END: LOGIKA BARU UNTUK SWITCH MODE PASAR
 
             logoutButton.addEventListener('click', async () => {
                 await auth.signOut();
@@ -728,25 +960,16 @@
                 { id: 'anthoni_salim', name: 'Anthoni Salim', style: 'Mengelola konglomerasi besar di sektor makanan (Indofood), telekomunikasi, dan ritel, dengan strategi diversifikasi yang luas.' },
                 { id: 'cathie_wood', name: 'Cathie Wood', style: 'Investasi pada inovasi disruptif di sektor teknologi, genomik, dan blockchain (melalui ARK Invest), dengan toleransi risiko yang tinggi untuk potensi pertumbuhan eksponensial.' },
                 { id: 'saratoga_investama', name: 'Saratoga Investama Sedaya', style: 'Perusahaan investasi aktif dengan portofolio terdiversifikasi di sektor-sektor kunci seperti infrastruktur, sumber daya alam, dan konsumen.' },
-            ];
-            
-            const ipoList = [
-                { name: 'PT Energi Hijau Abadi', ticker: 'HEJO', status: 'Segera Hadir', price: 'Estimasi Rp 200 - Rp 250' },
-                { name: 'PT Nusantara Digital Investama', ticker: 'DIGI', status: 'Masa Penawaran', price: 'Harga Penawaran Rp 180' },
-                { name: 'PT Merry Riana Edukasi', ticker: 'MERI', status: 'Sudah Listing', price: null }, // Fetch live
-                { name: 'PT Cipta Sarana Medika', ticker: 'DKHH', status: 'Sudah Listing', price: null }, // Fetch live
-                { name: 'PT Teknologi Kelautan Terpadu', ticker: 'MARI', status: 'Segera Hadir', price: 'Estimasi Rp 300 - Rp 350' },
-                { name: 'PT Kuliner Rakyat Sejahtera', ticker: 'FOOD', status: 'Masa Penawaran', price: 'Harga Penawaran Rp 155' },
-                { name: 'PT Solusi Perangkat Lunak', ticker: 'SOFT', status: 'Sudah Listing', price: null }, // Fetch live
-                { name: 'PT Konstruksi Jaya Megah', ticker: 'MEGA', status: 'Sudah Listing', price: null } // Fetch live
-            ];
+        ];
+        
+        let fetchedIpoList = []; 
+        let watchlist = [];
 
-            const tabs = {
-                discovery: { content: document.getElementById('discovery-tab-content'), title: 'Temukan Peluang', subtitle: 'Cari ide saham terbaik untuk Anda.' },
+        const tabs = {
+            discovery: { content: document.getElementById('discovery-tab-content'), title: 'Temukan Peluang', subtitle: 'Cari ide saham terbaik untuk Anda.' },
                 strategyLab: { content: document.getElementById('strategy-lab-tab-content'), title: 'Lab Strategi', subtitle: 'Rancang & simpan portofolio virtual Anda.' },
                 track: { content: document.getElementById('track-tab-content'), title: 'Lacak Investasi', subtitle: 'Pantau portofolio dan watchlist Anda.' },
                 analysis: { content: document.getElementById('analysis-tab-content'), title: 'Analisis Saham', subtitle: 'Dapatkan analisis mendalam untuk saham pilihan.' },
-                // education: { content: document.getElementById('education-tab-content'), title: 'Pusat Edukasi', subtitle: 'Tingkatkan pengetahuan investasi Anda di sini.' }, // Dihapus
             };
 
             const bottomNavButtons = document.querySelectorAll('.bottom-nav-btn');
@@ -784,16 +1007,22 @@
             const saveManualPortfolioBtn = document.getElementById('save-manual-portfolio-btn');
             const manualPortfolioInputRows = document.getElementById('manual-portfolio-input-rows');
             const healthCheckResultsContainer = document.getElementById('health-check-results-container');
+            const startDebateBtn = document.getElementById('start-debate-btn');
+            const debateResultsContainer = document.getElementById('debate-results-container');
             const getWatchlistSummaryBtn = document.getElementById('get-watchlist-summary-btn');
             const portfoliosContainer = document.getElementById('portfolios-container');
             const directAnalysisBtn = document.getElementById('direct-analysis-btn');
             const directAnalysisInput = document.getElementById('direct-analysis-input');
             const compareStocksBtn = document.getElementById('compare-stocks-btn');
-            const manualVirtualCapitalInput = document.getElementById('manual-virtual-capital');
+            const manualVirtualCapitalInput = document.getElementById('manual-virtual-capital'); 
             
-            // URL Proxy AI
-            const RENDER_AI_PROXY_URL = 'https://stock-api-server-28ng.onrender.com/api/gemini-proxy'; 
+            // SECURITY FIX: Kunci API Gemini dipindahkan ke server Render Anda.
+            // Panggil URL ini, dan server Anda harus menambahkan kunci API secara aman.
+            const RENDER_AI_PROXY_URL = 'https://analisahamku-v2.onrender.com/api/gemini-proxy'; // Ganti dengan endpoint yang Anda buat
             
+            // URL API Backend untuk data harga saham/kripto
+            const PRICE_API_URL = 'https://stock-api-server-28ng.onrender.com/api/';
+
             function showModal(title, content, isChart = false) {
                 const sizeClass = isChart ? 'max-w-4xl' : 'max-w-lg';
                 const modalHTML = `
@@ -814,6 +1043,27 @@
                 });
             }
 
+            // NEW FUNCTION: Modal untuk penjelasan Lot
+            function showLotInfoModal() {
+                 showModal('Penting: Satuan Lot (100 Lembar)', `
+                    <p class="mb-4">Perlu diperhatikan bahwa di Pasar Modal Indonesia (BEI), saham dibeli dan dijual dalam satuan **Lot**, di mana 1 Lot = 100 Lembar saham.</p>
+                    <p class="mb-4">Ketika Anda memasukkan modal virtual, sistem akan menghitung berapa **Lot penuh** yang dapat dibeli dari uang yang dialokasikan (berdasarkan harga saham saat ini).</p>
+                    <div class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <p class="font-semibold text-blue-800 dark:text-blue-200">Contoh:</p>
+                        <ul class="list-disc pl-5 text-sm">
+                            <li>Modal yang Dialokasikan: Rp 1.000.000</li>
+                            <li>Harga Saham per Lembar: Rp 8.000</li>
+                            <li>Harga 1 Lot: Rp 800.000</li>
+                            <li>Maksimal Lot yang Bisa Dibeli: 1 Lot.</li>
+                            <li>Modal Awal Portofolio: Hanya Rp 800.000.</li>
+                            <li>Sisa Modal: Rp 200.000 tidak terpakai (karena tidak cukup untuk lot kedua).</li>
+                        </ul>
+                    </div>
+                    <p class="mt-4 text-sm text-gray-500">Oleh karena itu, **Modal Awal** portofolio Anda mungkin sedikit lebih kecil dari **Modal Virtual** yang Anda input.</p>
+                `);
+            }
+            // END NEW FUNCTION
+            
             function showChartModal(ticker) {
                 const title = `Grafik Harga: ${ticker}`;
                 const content = `<div id="modal-chart-container" class="w-full h-[450px]"></div>`;
@@ -849,6 +1099,9 @@
                     loadAndDisplayPortfolios();
                     renderWatchlistPage();
                 }
+                
+                // Panggil update UI saat ganti tab (untuk memastikan visibilitas IPO)
+                updateMarketUI(currentMarketMode);
             }
             
             bottomNavButtons.forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
@@ -871,6 +1124,7 @@
                 }
             });
 
+            if(startDebateBtn) startDebateBtn.addEventListener('click', handleDebateGeneration);
             if(getWatchlistSummaryBtn) getWatchlistSummaryBtn.addEventListener('click', handleWatchlistSummary);
 
             if(directAnalysisBtn) {
@@ -931,22 +1185,42 @@
                 });
             }
             
+            // MODIFIED: Menggunakan currentMarketMode untuk menentukan ticker suffix dan API URL.
             async function triggerBackendFetch(ticker) {
-                const tickerWithSuffix = `${ticker.toLowerCase()}.jk`;
-                const apiUrl = `https://stock-api-server-28ng.onrender.com/api/${tickerWithSuffix}`;
+                const isCrypto = currentMarketMode === 'crypto';
+                
+                // Tentukan suffix atau format ticker
+                const finalTicker = isCrypto ? `${ticker.toUpperCase()}-USD` : `${ticker.toLowerCase()}.jk`;
+                
+                // Gunakan URL API yang sudah ada
+                const apiUrl = PRICE_API_URL + finalTicker; 
+                
                 try {
                     const response = await fetch(apiUrl);
                     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                     const data = await response.json();
-                    const price = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
-                    const companyName = data?.chart?.result?.[0]?.meta?.instrumentDisplayName || ticker;
-                    if (price === undefined) throw new Error("Price not found in API response structure.");
-                    return { regularMarketPrice: price, companyName: companyName, aiAnalysis: `Data harga terbaru berhasil diambil dari server backend.` };
+                    
+                    // Logika untuk Saham (Data yang diharapkan dari backend lama)
+                    if (!isCrypto) {
+                        const price = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
+                        const companyName = data?.chart?.result?.[0]?.meta?.instrumentDisplayName || ticker;
+                        if (price === undefined) throw new Error("Price not found in API response structure (Stock).");
+                        return { regularMarketPrice: price, companyName: companyName, aiAnalysis: `Data harga terbaru berhasil diambil dari server backend.` };
+                    } 
+                    // Logika untuk Kripto (Asumsi: backend mengembalikan data yang lebih sederhana)
+                    else {
+                        const price = data?.regularMarketPrice; // Asumsi backend mengembalikan struktur yang rata
+                        const companyName = data?.shortName || ticker;
+                        if (price === undefined) throw new Error("Price not found in API response structure (Crypto).");
+                        return { regularMarketPrice: price, companyName: companyName, aiAnalysis: `Data harga Kripto berhasil diambil dari server backend.` };
+                    }
+                    
                 } catch (error) {
-                    console.error(`Failed to fetch data from Render backend for ${tickerWithSuffix}:`, error);
+                    console.error(`Failed to fetch data from Render backend for ${finalTicker}:`, error);
                     return null;
                 }
             }
+            // END MODIFIED
 
             // MODIFIED: Fungsi ini sekarang memanggil endpoint proxy aman di server Render Anda.
             // Anda harus mengimplementasikan endpoint /api/gemini-proxy di server Anda.
@@ -955,7 +1229,8 @@
                 // 1. Construct payload to be sent to the secure proxy server
                 const clientPayload = { 
                     prompt: prompt,
-                    schema: schema,
+                    // FIX: Kirim objek skema jika ada, bukan stringify dua kali
+                    schema: schema ? JSON.stringify(schema) : undefined,
                     // Proxy server akan menentukan apakah akan menggunakan Google Search grounding berdasarkan keberadaan 'schema'
                 };
                 
@@ -999,133 +1274,239 @@
                 return null;
             }
 
+            // MODIFIED: Menggunakan currentMarketMode untuk inisialisasi analisis
             async function handleFetchData(ticker, price = null) {
                 currentAnalysisTicker = ticker;
                 switchTab('analysis');
                 document.querySelector('#analysis-tab-content .sub-tab-btn[data-target="direct-analysis-sub-content"]').click();
                 
+                const isCrypto = currentMarketMode === 'crypto';
+                
+                // Update UI Analisis (hilangkan Checklist untuk Kripto, karena metrik berbeda)
+                investorChecklistSection.classList.toggle('hidden', isCrypto);
+                
                 analysisPlaceholder.classList.add('hidden');
                 analysisResultsContainer.classList.remove('hidden');
                 stockName.textContent = `Analisis untuk ${ticker}`;
+                projectionContainer.innerHTML = `<div class="flex justify-center p-4"><div class="loader"></div></div>`;
+                companyProfileContainer.innerHTML = `<div class="flex justify-center p-4"><div class="loader"></div></div>`;
+                fundamentalDataContainer.innerHTML = `<div class="flex justify-center p-4"><div class="loader"></div></div>`;
                 advancedOutputContainer.innerHTML = `<p class="text-center text-gray-500 dark:text-gray-400">Lengkapi checklist di atas dan klik tombol di bawah untuk mendapatkan analisis mendalam dari AI.</p>`;
+                debateResultsContainer.innerHTML = `<p class="text-center text-gray-500 dark:text-gray-400">Dapatkan dua sisi argumen dari AI untuk membuat keputusan yang lebih matang.</p>`;
                 runAdvancedAnalysisButton.disabled = false;
                 
-                loadChecklistForAnalysis();
+                if (!isCrypto) {
+                    loadChecklistForAnalysis();
+                }
+
                 displayTradingViewWidget(ticker, 'technical-chart-container');
                 const backendData = await triggerBackendFetch(ticker);
                 const finalPrice = price !== null ? price : (backendData ? backendData.regularMarketPrice : null);
 
-                await fetchAnalysisModuleData(ticker, finalPrice);
+                // Panggil fungsi yang sesuai
+                if (isCrypto) {
+                    fetchCryptoMetrics(ticker, finalPrice);
+                    fetchCompanyProfile(ticker, isCrypto); // Re-use profile, adjust prompt
+                    fetchProjectionData(ticker, finalPrice, isCrypto); // Re-use projection, adjust prompt
+                } else {
+                    fetchFundamentalData(ticker, finalPrice);
+                    fetchCompanyProfile(ticker);
+                    fetchProjectionData(ticker, finalPrice);
+                }
             }
+            // END MODIFIED
 
+            // MODIFIED: Menggunakan currentMarketMode untuk TradingView Widget
             function displayTradingViewWidget(ticker, containerId) {
                 const container = document.getElementById(containerId);
                 if (!container) return;
                 container.innerHTML = '';
                 const theme = htmlTag.classList.contains('dark') ? 'dark' : 'light';
-                const tradingViewTicker = `IDX:${ticker.replace('.JK', '')}`;
-                new TradingView.widget({ "width": "100%", "height": "100%", "symbol": tradingViewTicker, "interval": "D", "timezone": "Asia/Jakarta", "theme": theme, "style": "1", "locale": "id", "toolbar_bg": "#f1f3f6", "enable_publishing": false, "allow_symbol_change": true, "container_id": containerId });
-            }
-
-            // START CONSOLIDATED ANALYSIS FETCHING LOGIC
-
-            /**
-             * Fungsi pembantu untuk mengambil data dari Gemini dan menampilkannya
-             * di container yang sesuai.
-             */
-            async function fetchDataAndDisplay(ticker, price, dataType) {
-                let prompt, schema, container;
-
-                if (dataType === 'projection') {
-                    container = projectionContainer;
-                    prompt = price
-                        ? `Berikan ringkasan proyeksi harga untuk ${ticker} dengan mempertimbangkan harga saat ini adalah Rp ${price}. Sampaikan dalam 3-4 kalimat. Format sebagai JSON: {"analisis": "..."}`
-                        : `Berikan ringkasan proyeksi harga untuk ${ticker} dalam 3-4 kalimat. Format sebagai JSON: {"analisis": "..."}`;
-                    schema = { type: "OBJECT", properties: { "analisis": { type: "STRING" } }, required: ["analisis"] };
-                } else if (dataType === 'fundamental') {
-                    container = fundamentalDataContainer;
-                    prompt = price
-                        ? `Dengan informasi bahwa harga terakhir ${ticker} adalah sekitar ${price}, berikan data fundamental utama: Market Cap, P/E Ratio (TTM), EPS (TTM), ROE, P/B Ratio, Dividend Yield. Format sebagai JSON array: [{"metrik": "...", "nilai": "..."}].`
-                        : `Berikan data fundamental utama untuk ${ticker}: Market Cap, P/E Ratio (TTM), EPS (TTM), ROE, P/B Ratio, Dividend Yield. Format sebagai JSON array: [{"metrik": "...", "nilai": "..."}].`;
-                    schema = { type: "ARRAY", items: { type: "OBJECT", properties: { "metrik": { type: "STRING" }, "nilai": { type: "STRING" } }, required: ["metrik", "nilai"] } };
-                } else if (dataType === 'profile') {
-                    container = companyProfileContainer;
-                    prompt = `Berikan ringkasan profil singkat untuk ${ticker}. Format sebagai JSON: {"profil": "..."}`;
-                    schema = { type: "OBJECT", properties: { "profil": { type: "STRING" } }, required: ["profil"] };
+                const isCrypto = currentMarketMode === 'crypto';
+                
+                let tradingViewSymbol;
+                let tradingViewInterval = "D";
+                
+                if (isCrypto) {
+                    tradingViewSymbol = `BINANCE:${ticker}USDT`; // Contoh: BTC-USD menjadi BINANCE:BTCUSDT
+                    tradingViewInterval = "4H"; // Interval yang lebih pendek untuk Kripto
                 } else {
-                    return;
+                    tradingViewSymbol = `IDX:${ticker.replace('.JK', '')}`; // Contoh: BBCA.JK menjadi IDX:BBCA
+                    tradingViewInterval = "D";
                 }
+                
+                new TradingView.widget({ 
+                    "width": "100%", 
+                    "height": "100%", 
+                    "symbol": tradingViewSymbol, 
+                    "interval": tradingViewInterval, 
+                    "timezone": "Asia/Jakarta", 
+                    "theme": theme, 
+                    "style": "1", 
+                    "locale": "id", 
+                    "toolbar_bg": "#f1f3f6", 
+                    "enable_publishing": false, 
+                    "allow_symbol_change": true, 
+                    "container_id": containerId 
+                });
+            }
+            // END MODIFIED
+
+            // MODIFIED: Fungsi fetchFundamentalData diubah menjadi khusus saham
+            async function fetchFundamentalData(ticker, price) {
+                let prompt = price 
+                    ? `Dengan informasi bahwa harga terakhir ${ticker} adalah sekitar Rp ${new Intl.NumberFormat('id-ID').format(price)}, berikan data fundamental utama: Market Cap, P/E Ratio (TTM), EPS (TTM), ROE, P/B Ratio, Dividend Yield. Gunakan riset terkini.`
+                    : `Berikan data fundamental utama untuk ${ticker}: Market Cap, P/E Ratio (TTM), EPS (TTM), ROE, P/B Ratio, Dividend Yield. Gunakan riset terkini.`;
+                
+                const schema = {
+                    type: "OBJECT",
+                    properties: {
+                        ticker: { type: "STRING" },
+                        data_fundamental: {
+                            type: "ARRAY",
+                            items: {
+                                type: "OBJECT",
+                                properties: {
+                                    key: { type: "STRING", description: "Kunci singkat: MCAP, PER, EPS, ROE, PBV, DY" },
+                                    label: { type: "STRING", description: "Nama metrik yang panjang untuk tampilan UI (misalnya: P/E Ratio TTM)" },
+                                    nilai: { type: "STRING", description: "Nilai metrik, termasuk satuan (misalnya: 15.2x, 0.8x, 50 T)" }
+                                },
+                                required: ["key", "label", "nilai"]
+                            }
+                        }
+                    },
+                    required: ["ticker", "data_fundamental"]
+                };
                 
                 const data = await fetchFromGemini(prompt, schema);
                 
-                // Cek kegagalan data
-                if (!data || (Array.isArray(data) && data.length === 0) || (typeof data === 'object' && !Object.values(data).some(v => v))) {
-                    container.innerHTML = `<p class="text-center text-sm">Data ${dataType} tidak ditemukan.</p>`;
-                    return;
+                if (document.getElementById(`fundamental-data-container`)) {
+                    displayFundamentalData(data?.data_fundamental || []);
                 }
-
-                // Logika Display Terpusat
-                if (dataType === 'profile') {
-                    container.innerHTML = `<p class="text-sm leading-relaxed">${data.profil}</p>`;
-                } else if (dataType === 'fundamental') {
-                    let html = '';
-                    data.forEach(item => {
-                        html += `<div class="flex justify-between items-center text-sm bg-gray-50 dark:bg-gray-800 p-2.5 rounded-lg"><span>${item.metrik}</span><span class="font-semibold">${item.nilai}</span></div>`;
-                    });
-                    container.innerHTML = `<div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-2">${html}</div>`;
-                } else if (dataType === 'projection') {
-                    container.innerHTML = `<p class="text-sm leading-relaxed">${data.analisis}</p>`;
+                return data?.data_fundamental || null;
+            }
+            // END MODIFIED
+            
+            // FUNGSI BARU: Untuk Metrik Kripto
+            async function fetchCryptoMetrics(ticker, price) {
+                let prompt = price 
+                    ? `Untuk aset kripto ${ticker}, dengan harga saat ini sekitar $${new Intl.NumberFormat('id-ID').format(price)}, berikan metrik kunci: Market Cap, Circulating Supply, Total Value Locked (TVL), dan All-Time High. Gunakan riset terkini.`
+                    : `Untuk aset kripto ${ticker}, berikan metrik kunci: Market Cap, Circulating Supply, Total Value Locked (TVL), dan All-Time High. Gunakan riset terkini.`;
+                
+                const schema = {
+                    type: "OBJECT",
+                    properties: {
+                        ticker: { type: "STRING" },
+                        data_fundamental: {
+                            type: "ARRAY",
+                            items: {
+                                type: "OBJECT",
+                                properties: {
+                                    key: { type: "STRING", description: "Kunci singkat: MCAP, CSUPPLY, TVL, ATH" },
+                                    label: { type: "STRING", description: "Nama metrik yang panjang untuk tampilan UI (misalnya: Total Value Locked)" },
+                                    nilai: { type: "STRING", description: "Nilai metrik, termasuk satuan (misalnya: $50 B, 15 M)" }
+                                },
+                                required: ["key", "label", "nilai"]
+                            }
+                        }
+                    },
+                    required: ["ticker", "data_fundamental"]
+                };
+                
+                const data = await fetchFromGemini(prompt, schema);
+                
+                if (document.getElementById(`fundamental-data-container`)) {
+                    // Re-use display function
+                    displayFundamentalData(data?.data_fundamental || []);
                 }
+                // Return data in the same shape as Saham for handleCompareStocks compatibility
+                return data?.data_fundamental || null; 
             }
+            // END FUNGSI BARU
 
-            /**
-             * Fungsi utama yang mengelola pengambilan data Analisis secara paralel.
-             * Konsolidasi dari fetchFundamentalData, fetchCompanyProfile, dan fetchProjectionData.
-             */
-            async function fetchAnalysisModuleData(ticker, price) {
-                const containers = [projectionContainer, companyProfileContainer, fundamentalDataContainer];
-
-                // Set loaders for all containers
-                containers.forEach(c => c.innerHTML = `<div class="flex justify-center p-4"><div class="loader"></div></div>`);
-
-                // Define all promises to run in parallel
-                const promises = [
-                    fetchDataAndDisplay(ticker, price, 'projection'),
-                    fetchDataAndDisplay(ticker, price, 'fundamental'),
-                    fetchDataAndDisplay(ticker, price, 'profile')
-                ];
-
-                await Promise.all(promises);
+            // MODIFIED: Menggunakan struktur data baru (data_fundamental)
+            function displayFundamentalData(data) {
+                if (!data || data.length === 0) { fundamentalDataContainer.innerHTML = `<p class="text-center text-sm">Data ${currentMarketMode === 'crypto' ? 'kripto' : 'fundamental'} tidak ditemukan.</p>`; return; }
+                fundamentalDataContainer.innerHTML = '';
+                data.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'flex justify-between items-center text-sm bg-gray-50 dark:bg-gray-800 p-2.5 rounded-lg';
+                    // Menggunakan item.label untuk tampilan, item.key untuk internal (jika perlu)
+                    div.innerHTML = `<span>${item.label}</span><span class="font-semibold">${item.nilai}</span>`;
+                    fundamentalDataContainer.appendChild(div);
+                });
             }
+            // END MODIFIED
+            
+            // MODIFIED: Menambahkan parameter isCrypto ke fetchCompanyProfile
+            async function fetchCompanyProfile(ticker, isCrypto = false) {
+                let assetType = isCrypto ? 'aset kripto' : 'perusahaan';
+                let prompt = `Berikan ringkasan profil singkat untuk ${assetType} ${ticker}. Format sebagai JSON: {"profil": "..."}`;
+                const schema = { type: "OBJECT", properties: { "profil": { type: "STRING" } }, required: ["profil"] };
+                const data = await fetchFromGemini(prompt, schema);
+                displayCompanyProfile(data);
+            }
+            // END MODIFIED
 
-            // END CONSOLIDATED ANALYSIS FETCHING LOGIC
+            function displayCompanyProfile(data) {
+                if (!data || !data.profil) { companyProfileContainer.innerHTML = `<p class="text-center text-sm">Profil tidak ditemukan.</p>`; return; }
+                companyProfileContainer.innerHTML = `<p class="text-sm leading-relaxed">${data.profil}</p>`;
+            }
+            
+            // MODIFIED: Menambahkan parameter isCrypto ke fetchProjectionData
+            async function fetchProjectionData(ticker, price, isCrypto = false) {
+                let assetType = isCrypto ? 'aset kripto' : 'saham';
+                let currency = isCrypto ? '$' : 'Rp ';
+                
+                let prompt = price
+                    ? `Berikan ringkasan proyeksi harga untuk ${assetType} ${ticker} dengan mempertimbangkan harga saat ini adalah ${currency}${new Intl.NumberFormat('id-ID').format(price)}. Sampaikan dalam 3-4 kalimat. Format sebagai JSON: {"analisis": "..."}`
+                    : `Berikan ringkasan proyeksi harga untuk ${assetType} ${ticker} dalam 3-4 kalimat. Format sebagai JSON: {"analisis": "..."}`;
+                const schema = { type: "OBJECT", properties: { "analisis": { type: "STRING" } }, required: ["analisis"] };
+                const data = await fetchFromGemini(prompt, schema);
+                displayProjectionData(data);
+            }
+            // END MODIFIED
 
+            function displayProjectionData(data) {
+                if (!data || !data.analisis) { projectionContainer.innerHTML = `<p class="text-center">Analisis tidak ditemukan.</p>`; return; }
+                projectionContainer.innerHTML = `<p class="text-sm leading-relaxed">${data.analisis}</p>`;
+            }
+            
+            // MODIFIED: Menyesuaikan Advanced Analysis untuk Kripto
             async function handleAdvancedAnalysisClick() {
                 if (!currentAnalysisTicker) return;
+                const isCrypto = currentMarketMode === 'crypto';
+                
                 runAdvancedAnalysisButton.disabled = true;
                 advancedOutputContainer.innerHTML = `<div class="flex justify-center p-4"><div class="loader"></div></div>`;
 
-                const checklistContainer = document.getElementById('checklist-container');
-                let checklistContext = "Pengguna telah melakukan checklist dengan hasil sebagai berikut: ";
-                const checklistItems = checklistContainer.querySelectorAll('.checklist-item-container');
-                let hasCheckedItems = false;
-                checklistItems.forEach(item => {
-                    const checkbox = item.querySelector('.checklist-item');
-                    const question = item.querySelector('label').textContent;
-                    const autoCheckResult = item.querySelector('.checklist-result').textContent;
-                    if (checkbox.checked) {
-                        hasCheckedItems = true;
-                        checklistContext += `[V] ${question}. `;
-                        if (autoCheckResult) {
-                            checklistContext += `(Hasil Cek Otomatis: ${autoCheckResult}). `;
+                let checklistContext = "Analisis tidak menggunakan checklist (Mode Kripto).";
+                if (!isCrypto) {
+                    const checklistContainer = document.getElementById('checklist-container');
+                    checklistContext = "Pengguna telah melakukan checklist dengan hasil sebagai berikut: ";
+                    const checklistItems = checklistContainer.querySelectorAll('.checklist-item-container');
+                    let hasCheckedItems = false;
+                    checklistItems.forEach(item => {
+                        const checkbox = item.querySelector('.checklist-item');
+                        const question = item.querySelector('label').textContent;
+                        const autoCheckResult = item.querySelector('.checklist-result').textContent;
+                        if (checkbox.checked) {
+                            hasCheckedItems = true;
+                            checklistContext += `[V] ${question}. `;
+                            if (autoCheckResult) {
+                                checklistContext += `(Hasil Cek Otomatis: ${autoCheckResult}). `;
+                            }
                         }
+                    });
+                    if (!hasCheckedItems) {
+                        checklistContext = "Pengguna tidak mengisi checklist.";
                     }
-                });
-                if (!hasCheckedItems) {
-                    checklistContext = "Pengguna tidak mengisi checklist.";
                 }
                 
-                const prompt = `Sebagai analis ahli, lakukan riset pasar terkini (berita, data makroekonomi) untuk saham ${currentAnalysisTicker}. Pertimbangkan juga hasil checklist dari pengguna berikut: "${checklistContext}". Berikan dua skenario: 1. Untuk Pemegang Saham (Holder): rekomendasi (Beli Lagi/Tahan/Jual) dan ringkasan. 2. Untuk Calon Investor (Watcher): berikan rekomendasi harga beli dalam rentang angka spesifik (misal: "Rp 10.000 - Rp 10.500") dan kondisi terbaik untuk masuk. Sertakan juga poin positif (bullish) dan negatif (bearish). Format sebagai JSON: {holder: {rekomendasi, ringkasan}, watcher: {rekomendasi_harga_beli, kondisi_terbaik}, poin_positif: [], poin_negatif: []}.`;
+                const assetType = isCrypto ? 'aset kripto' : 'saham';
+                const marketContext = isCrypto ? 'pasar kripto, dinamika tokenomics, dan sentimen adopsi' : 'pasar BEI, berita, dan data makroekonomi';
+
+                const prompt = `Sebagai analis ahli, lakukan riset ${marketContext} terkini untuk ${assetType} ${currentAnalysisTicker}. Pertimbangkan: "${checklistContext}". Berikan dua skenario: 1. Untuk Pemegang Aset (Holder): rekomendasi (Beli Lagi/Tahan/Jual) dan ringkasan. 2. Untuk Calon Investor (Watcher): berikan rekomendasi harga beli dalam rentang angka spesifik (misal: "Rp 10.000 - Rp 10.500" atau "$50 - $55") dan kondisi terbaik untuk masuk. Sertakan juga poin positif (bullish) dan negatif (bearish). Format sebagai JSON: {holder: {rekomendasi, ringkasan}, watcher: {rekomendasi_harga_beli, kondisi_terbaik}, poin_positif: [], poin_negatif: []}.`;
                 const schema = {
                     type: "OBJECT",
                     properties: {
@@ -1140,6 +1521,7 @@
                 displayAdvancedAnalysis(data);
                 runAdvancedAnalysisButton.disabled = false;
             }
+            // END MODIFIED
 
             function displayAdvancedAnalysis(data) {
                 if (!data || !data.holder || !data.watcher) {
@@ -1153,6 +1535,8 @@
                 if (recommendation.includes('BELI')) { colorClass = 'text-green-500'; iconName = 'trending-up-outline'; } 
                 else if (recommendation.includes('JUAL')) { colorClass = 'text-red-500'; iconName = 'trending-down-outline'; } 
                 else { colorClass = 'text-yellow-500'; iconName = 'remove-outline'; }
+                
+                const assetTypeLabel = currentMarketMode === 'crypto' ? 'Pemegang Aset' : 'Pemegang Saham';
 
                 let positivePointsHTML = data.poin_positif.map(point => `<li class="flex items-start gap-2"><ion-icon name="checkmark-circle-outline" class="text-green-500 text-xl flex-shrink-0"></ion-icon><span>${point}</span></li>`).join('');
                 let negativePointsHTML = data.poin_negatif.map(point => `<li class="flex items-start gap-2"><ion-icon name="close-circle-outline" class="text-red-500 text-xl flex-shrink-0"></ion-icon><span>${point}</span></li>`).join('');
@@ -1160,7 +1544,7 @@
                 advancedOutputContainer.innerHTML = `
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl">
-                            <h4 class="font-bold text-lg mb-2 flex items-center gap-2"><ion-icon name="person-circle-outline"></ion-icon>Untuk Pemegang Saham (Holder)</h4>
+                            <h4 class="font-bold text-lg mb-2 flex items-center gap-2"><ion-icon name="person-circle-outline"></ion-icon>Untuk ${assetTypeLabel} (Holder)</h4>
                             <p class="text-3xl font-extrabold ${colorClass} flex items-center gap-2"><ion-icon name="${iconName}"></ion-icon>${data.holder.rekomendasi}</p>
                             <p class="mt-2 text-sm">${data.holder.ringkasan}</p>
                         </div>
@@ -1187,6 +1571,10 @@
             }
             
             function getCardHTML(stock, iconInfo, headerContent, badgeContent = '') {
+                // MODIFIED: Menggunakan IDR atau USD berdasarkan mode
+                const isCrypto = currentMarketMode === 'crypto';
+                const currencySymbol = isCrypto ? '$' : 'Rp';
+
                 return `
                     <div class="flex items-start gap-4">
                         <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center ${iconInfo.bgColor} ${iconInfo.textColor} rounded-full mt-1">
@@ -1205,7 +1593,7 @@
                             <p class="text-md">${stock.nama_perusahaan}</p>
                             ${badgeContent}
                             <div class="mt-2 flex items-center gap-2">
-                                <span class="font-semibold">Rp</span>
+                                <span class="font-semibold">${currencySymbol}</span>
                                 <input type="number" id="price-input-${stock.ticker}" placeholder="Memuat..." class="price-input w-24 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-sm rounded-lg p-1.5 focus:ring-blue-500 focus:border-blue-500">
                                 <button class="view-chart-btn text-blue-500 hover:text-blue-600" title="Lihat harga di sini" data-ticker="${stock.ticker}">
                                     <ion-icon name="analytics-outline" class="text-xl"></ion-icon>
@@ -1232,7 +1620,7 @@
                 const stocksFromGemini = await fetchFromGemini(prompt, schema);
                 
                 if (!stocksFromGemini || stocksFromGemini.length === 0) {
-                    container.innerHTML = `<p class="text-center">Tidak ditemukan saham yang cocok.</p>`;
+                    container.innerHTML = `<p class="text-center">Tidak ditemukan aset yang cocok di mode ${currentMarketMode}.</p>`;
                     return;
                 }
                 
@@ -1319,42 +1707,56 @@
                 }
             }
 
+            // MODIFIED: Sesuaikan Screener untuk Kripto
             async function handleScreenerClick() {
                 screenerButton.disabled = true; screenerButton.classList.add('opacity-50');
                 const isMultibagger = multibaggerToggle.checked;
                 const selectedSector = sectorSelect.value;
                 const customPrompt = aiPromptInput.value.trim();
                 
+                const isCrypto = currentMarketMode === 'crypto';
+                let assetLabel = isCrypto ? 'aset kripto' : 'saham di BEI';
+                let marketContext = isCrypto ? 'dinamika pasar kripto global dan sentimen adopsi' : 'berita pasar terkini dan data ekonomi makro Indonesia (suku bunga BI, inflasi BPS, nilai tukar Rupiah)';
+                
                 let sectorQuery = (selectedSector !== "semua") ? ` dari sektor ${selectedSector}` : "";
-                let customQuery = customPrompt ? ` Fokus pada saham yang cocok dengan kriteria berikut: "${customPrompt}".` : "";
+                let customQuery = customPrompt ? ` Fokus pada ${assetLabel} yang cocok dengan kriteria berikut: "${customPrompt}".` : "";
                 
                 let prompt, schema;
                 
-                const baseInstruction = "Sebagai analis saham ahli, periksa berita pasar terkini dan data ekonomi makro Indonesia (suku bunga BI, inflasi BPS, nilai tukar Rupiah). Berdasarkan analisis tersebut, ";
+                const baseInstruction = `Sebagai analis ${isCrypto ? 'kripto' : 'saham'} ahli, periksa ${marketContext}. Berdasarkan analisis tersebut, `;
 
                 if (isMultibagger) {
-                    prompt = `${baseInstruction} cari 5 saham di BEI${sectorQuery} yang memiliki rekam jejak sebagai multibagger.${customQuery} Sertakan ticker, nama perusahaan, bukti sejarahnya, dan alasan singkat mengapa saham ini relevan dengan kondisi pasar saat ini. Format sebagai JSON array: ticker, nama_perusahaan, bukti, alasan.`;
+                    // Multibagger untuk Kripto diganti dengan "High Growth Potential"
+                    prompt = `${baseInstruction} cari 5 ${assetLabel} yang memiliki potensi pertumbuhan tinggi (sering disebut '10x potential'). Sertakan ticker, nama (atau nama koin), bukti teknikal/tokenomics, dan alasan singkat mengapa aset ini relevan dengan kondisi pasar saat ini. Format sebagai JSON array: ticker, nama_perusahaan, bukti, alasan.`;
                     schema = { type: "ARRAY", items: { type: "OBJECT", properties: { ticker: { type: "STRING" }, nama_perusahaan: { type: "STRING" }, bukti: { type: "STRING" }, alasan: { type: "STRING" } }, required: ["ticker", "nama_perusahaan", "bukti", "alasan"] } };
                 } else {
                     const selectedRiskProfile = riskProfileSelect.value;
                     let riskProfileQuery = "";
-                    if (selectedRiskProfile === "stabil") { riskProfileQuery = " Fokus pada saham 'value' atau 'blue-chip'."; }
-                    else if (selectedRiskProfile === "pertumbuhan") { riskProfileQuery = " Fokus pada saham 'growth'."; }
-                    prompt = `${baseInstruction} berikan peringkat 5 besar saham di BEI${sectorQuery} dengan potensi terbaik.${riskProfileQuery}${customQuery} Sertakan: peringkat, ticker, nama perusahaan, dan alasan singkat mengapa saham ini relevan dengan kondisi pasar saat ini. Format sebagai JSON array.`;
+                    if (selectedRiskProfile === "stabil") { riskProfileQuery = isCrypto ? " Fokus pada koin 'blue-chip' (Bitcoin/Ethereum) atau proyek De-Fi/L1 yang mapan." : " Fokus pada saham 'value' atau 'blue-chip'."; }
+                    else if (selectedRiskProfile === "pertumbuhan") { riskProfileQuery = isCrypto ? " Fokus pada koin/token kapitalisasi kecil/menengah dengan katalis kuat." : " Fokus pada saham 'growth'."; }
+                    
+                    prompt = `${baseInstruction} berikan peringkat 5 besar ${assetLabel}${sectorQuery} dengan potensi terbaik.${riskProfileQuery}${customQuery} Sertakan: peringkat, ticker, nama perusahaan (atau nama koin), dan alasan singkat mengapa aset ini relevan dengan kondisi pasar saat ini. Format sebagai JSON array.`;
                     schema = { type: "ARRAY", items: { type: "OBJECT", properties: { peringkat: { type: "NUMBER" }, ticker: { type: "STRING" }, nama_perusahaan: { type: "STRING" }, alasan: { type: "STRING" } }, required: ["peringkat", "ticker", "nama_perusahaan", "alasan"] } };
                 }
+                
                 try {
                     await fetchAndDisplayStocks(screenerResultsContainer, prompt, schema, getScreenerCardConfig(isMultibagger));
                 } finally {
                     screenerButton.disabled = false; screenerButton.classList.remove('opacity-50');
                 }
             }
+            // END MODIFIED
             
+            // MODIFIED: Sesuaikan Discount Hunter untuk Kripto
             async function handleDiscountHunterClick() {
                 findDiscountButton.disabled = true; findDiscountButton.classList.add('opacity-50');
                 const selectedSector = discountSectorSelect.value;
+                const isCrypto = currentMarketMode === 'crypto';
+                let assetLabel = isCrypto ? 'aset kripto' : 'saham berfundamental kuat di BEI';
+                
                 let sectorQuery = (selectedSector !== "semua") ? ` dari sektor ${selectedSector}` : "";
-                const prompt = `Dengan mempertimbangkan berita pasar dan data ekonomi terkini, cari 5 saham berfundamental kuat di BEI${sectorQuery} yang harganya sedang terkoreksi. Sertakan persentase penurunan, alasan singkat, dan dasar perhitungan penurunan (contoh: 'dari harga tertinggi 3 bulan terakhir'). Format sebagai JSON array.`;
+                
+                const prompt = `Dengan mempertimbangkan berita pasar dan data ekonomi terkini, cari 5 ${assetLabel}${sectorQuery} yang harganya sedang terkoreksi. Sertakan persentase penurunan, alasan singkat, dan dasar perhitungan penurunan (contoh: 'dari harga tertinggi 3 bulan terakhir'). Format sebagai JSON array.`;
                 const schema = { type: "ARRAY", items: { type: "OBJECT", properties: { ticker: { type: "STRING" }, nama_perusahaan: { type: "STRING" }, penurunan_persen: { type: "STRING" }, alasan: { type: "STRING" }, dasar_penurunan: { type: "STRING" } }, required: ["ticker", "nama_perusahaan", "penurunan_persen", "alasan", "dasar_penurunan"] } };
                 try {
                      await fetchAndDisplayStocks(discountHunterResultsContainer, prompt, schema, getDiscountHunterCardConfig());
@@ -1362,8 +1764,15 @@
                     findDiscountButton.disabled = false; findDiscountButton.classList.remove('opacity-50');
                 }
             }
+            // END MODIFIED
             
+            // MODIFIED: Sembunyikan Benchmark (Gaya Investor) untuk Kripto (untuk saat ini)
             async function handleBenchmarkClick() {
+                if (currentMarketMode === 'crypto') {
+                    benchmarkResultsContainer.innerHTML = `<p class="text-center text-red-500">Fitur Gaya Investor saat ini hanya tersedia untuk pasar Saham (BEI).</p>`;
+                    return;
+                }
+                
                 if (!selectedInvestor) { benchmarkResultsContainer.innerHTML = `<p class="text-center">Pilih seorang investor.</p>`; return; }
                 
                 const philosophyHTML = `
@@ -1416,20 +1825,25 @@
                     }
                 }
             }
+            // END MODIFIED
 
             async function handleIpoAnalysisClick(companyName) {
-                const ipoInfo = ipoList.find(ipo => ipo.name === companyName);
-                if (!ipoInfo) return;
+            // MODIFIKASI: Gunakan fetchedIpoList dan companyName
+            if (currentMarketMode === 'crypto') return; // Pastikan hanya untuk saham
+            
+            const ipoInfo = fetchedIpoList.find(ipo => ipo.companyName === companyName);
+            if (!ipoInfo) return;
 
-                const modalContent = `<div id="ipo-modal-content" class="flex justify-center p-8"><div class="loader"></div></div>`;
+            const modalContent = `<div id="ipo-modal-content" class="flex justify-center p-8"><div class="loader"></div></div>`;
                 showModal(`Analisis IPO: ${companyName}`, modalContent);
 
                 let priceInfo = '';
                 let priceContextForPrompt = '';
 
-                if (ipoInfo.status === 'Sudah Listing') {
-                    const backendData = await triggerBackendFetch(ipoInfo.ticker);
-                    if (backendData && backendData.regularMarketPrice) {
+            // MODIFIKASI: Gunakan offeringPeriod dan offeringPrice dari Firebase
+            if (ipoInfo.offeringPeriod.toLowerCase().includes('sudah listing')) { // Asumsi status ada di dalam string 'period'
+                const backendData = await triggerBackendFetch(ipoInfo.ticker);
+                if (backendData && backendData.regularMarketPrice) {
                         const formattedPrice = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(backendData.regularMarketPrice);
                         priceInfo = `<div class="mb-4"><h4 class="font-bold text-lg">Harga Saat Ini</h4><p class="text-2xl font-bold text-green-600 dark:text-green-400">${formattedPrice}</p></div>`;
                         priceContextForPrompt = `Harga saham saat ini adalah ${formattedPrice}.`;
@@ -1437,12 +1851,13 @@
                         priceInfo = `<div class="mb-4"><h4 class="font-bold text-lg">Harga Saat Ini</h4><p>Gagal memuat harga.</p></div>`;
                         priceContextForPrompt = 'Harga saat ini tidak dapat dimuat.';
                     }
-                } else {
-                    priceInfo = `<div class="mb-4"><h4 class="font-bold text-lg">Perkiraan Harga</h4><p class="text-xl font-bold text-blue-600 dark:text-blue-400">${ipoInfo.price}</p></div>`;
-                    priceContextForPrompt = `Perusahaan ini akan IPO dengan ${ipoInfo.price}.`;
-                }
+            } else {
+                priceInfo = `<div class="mb-4"><h4 class="font-bold text-lg">Perkiraan Harga</h4><p class="text-xl font-bold text-blue-600 dark:text-blue-400">${ipoInfo.offeringPrice}</p></div>`;
+                priceContextForPrompt = `Perusahaan ini akan IPO dengan ${ipoInfo.offeringPrice}.`;
+            }
+            // AKHIR MODIFIKASI
 
-                const prompt = `Lakukan riset berita terkini tentang perusahaan "${companyName}". Berikan analisis singkat untuk IPO perusahaan ini. ${priceContextForPrompt} Fokus pada: 1. Prospek bisnis perusahaan. 2. Penggunaan dana IPO. 3. Poin positif (kekuatan). 4. Poin negatif (risiko). Jawab dalam format JSON dengan kunci: prospek, penggunaan_dana, poin_positif (array), poin_negatif (array).`;
+            const prompt = `Lakukan riset berita terkini tentang perusahaan "${companyName}". Berikan analisis singkat untuk IPO perusahaan ini. ${priceContextForPrompt} Fokus pada: 1. Prospek bisnis perusahaan. 2. Penggunaan dana IPO. 3. Poin positif (kekuatan). 4. Poin negatif (risiko). Jawab dalam format JSON dengan kunci: prospek, penggunaan_dana, poin_positif (array), poin_negatif (array).`;
                 const schema = {
                     type: "OBJECT",
                     properties: {
@@ -1597,6 +2012,7 @@
             }
 
             function loadChecklistForAnalysis() {
+                // ... (Checklist items tetap sama untuk Saham)
                 const checklistItems = [
                     { key: 'Apakah saya memahami bisnis perusahaan ini?', info: 'Jelaskan dengan kata-kata sendiri apa yang perusahaan lakukan untuk menghasilkan uang. Jika tidak bisa, mungkin lebih baik dihindari.', weight: 20 },
                     { key: 'Apakah perusahaan ini mencetak laba secara konsisten (minimal 3 tahun terakhir)?', info: 'Cari data "Laba Bersih" atau "Net Income" di laporan keuangan tahunan.', weight: 15 },
@@ -1648,6 +2064,7 @@
                 document.getElementById('checklist-container').addEventListener('change', updateChecklistScore);
             }
             
+            // MODIFIED: Sesuaikan Strategy Generation untuk Kripto (tidak ada LOT)
             async function handleStrategyGeneration() {
                 const capitalInput = document.getElementById('virtual-capital');
                 const capital = capitalInput.value.replace(/\./g, '');
@@ -1657,6 +2074,9 @@
                 const durationUnit = document.getElementById('investment-duration-unit').value;
                 const duration = `${durationValue} ${durationUnit}`;
                 const focus = document.getElementById('focus-sector').value.trim();
+                
+                const isCrypto = currentMarketMode === 'crypto';
+                const assetLabel = isCrypto ? 'aset kripto' : 'saham BEI';
 
                 if (!capital || !profitTarget || !riskTolerance || !durationValue) {
                     showModal("Input Tidak Lengkap", "Mohon isi semua kolom yang wajib diisi.");
@@ -1665,15 +2085,16 @@
 
                 strategyResultsContainer.innerHTML = `<div class="flex justify-center p-8"><div class="loader"></div></div>`;
                 
-                let focusQuery = focus ? `Fokus pada sektor atau tema berikut: "${focus}".` : "";
+                let focusQuery = focus ? `Fokus pada sektor/tema/niche berikut: "${focus}".` : "";
 
                 const prompt = `Sebagai seorang manajer investasi ahli, lakukan riset pasar terkini. Buatkan alokasi portofolio virtual untuk investor di Indonesia.
+                - Tipe Aset: ${assetLabel}
                 - Modal: Rp ${capital}
                 - Target Keuntungan: ${profitTarget}%
                 - Durasi Investasi: ${duration}
                 - Toleransi Risiko Maksimal: ${riskTolerance}%.
                 - ${focusQuery}
-                Berikan 4-5 saham BEI untuk portofolio ini. Hasil harus dalam format JSON dengan kunci "portfolio" yang berisi array objek. Setiap objek harus memiliki kunci: "ticker", "nama_perusahaan", "alokasi_persen", dan "alasan". Pastikan total alokasi_persen adalah 100.`;
+                Berikan 4-5 ${assetLabel} untuk portofolio ini. Hasil harus dalam format JSON dengan kunci "portfolio" yang berisi array objek. Setiap objek harus memiliki kunci: "ticker", "nama_perusahaan" (atau nama koin), "alokasi_persen", dan "alasan". Pastikan total alokasi_persen adalah 100.`;
 
                 const schema = {
                     type: "OBJECT",
@@ -1698,6 +2119,7 @@
                 const data = await fetchFromGemini(prompt, schema);
                 displayStrategyResults(data, capital);
             }
+            // END MODIFIED
 
             function displayStrategyResults(data, capital) {
                 if (!data || !data.portfolio || data.portfolio.length === 0) {
@@ -1709,6 +2131,9 @@
                     ticker: stock.ticker,
                     allocation: stock.alokasi_persen
                 }));
+                
+                const isCrypto = currentMarketMode === 'crypto';
+                const currency = isCrypto ? '$' : 'Rp';
 
                 let resultsHTML = `<h3 class="text-xl font-bold text-center mb-6">Rekomendasi Alokasi Portofolio</h3><div class="space-y-4">`;
                 
@@ -1721,7 +2146,7 @@
                             <div class="flex items-center justify-between">
                                 <div>
                                     <h4 class="text-lg font-bold">${stock.ticker} - ${stock.nama_perusahaan}</h4>
-                                    <p class="text-sm text-blue-600 dark:text-blue-400 font-semibold">${formattedAmount} (${stock.alokasi_persen}%)</p>
+                                    <p class="text-sm text-blue-600 dark:text-blue-400 font-semibold">${currency} ${new Intl.NumberFormat('id-ID').format(amount)} (${stock.alokasi_persen}%)</p>
                                 </div>
                             </div>
                             <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
@@ -1754,15 +2179,17 @@
                 manualPortfolioInputRows.appendChild(newRow);
             }
 
+            // MODIFIED: Tambahkan logika visual loading saat menyimpan portofolio manual
             async function handleSaveManualPortfolio() {
                 const portfolioName = document.getElementById('manual-portfolio-name').value.trim() || `Portofolio Manual ${new Date().toLocaleDateString()}`;
-                const capitalInput = document.getElementById('manual-virtual-capital'); // Get new capital input
-                const capital = capitalInput.value.replace(/\./g, ''); // Clean the value
+                const capitalInput = document.getElementById('manual-virtual-capital'); 
+                const capital = capitalInput.value.replace(/\./g, ''); 
                 
                 const rows = manualPortfolioInputRows.querySelectorAll('.flex');
                 let portfolio = [];
                 let totalAllocation = 0;
                 let isValid = true;
+                const isCrypto = currentMarketMode === 'crypto';
 
                 rows.forEach(row => {
                     const tickerInput = row.querySelector('.portfolio-ticker');
@@ -1793,21 +2220,68 @@
                     showModal("Alokasi Tidak Valid", `Total alokasi harus 100%, saat ini totalnya ${totalAllocation}%.`);
                     return;
                 }
+                
+                // START: LOGIKA LOADING
+                saveManualPortfolioBtn.disabled = true;
+                saveManualPortfolioBtn.innerHTML = '<div class="mini-loader mr-2"></div> Memproses...';
+                // END: LOGIKA LOADING
 
-                await savePortfolio(portfolioName, portfolio, totalCapital); // Pass totalCapital
+                try {
+                    await savePortfolio(portfolioName, portfolio, totalCapital, isCrypto); // Pass isCrypto
+                } catch (error) {
+                    console.error("Gagal menyimpan portofolio manual:", error);
+                    showModal("Error", "Gagal menyimpan portofolio. Coba lagi.");
+                } finally {
+                    // KEMBALIKAN KE STATE AWAL
+                    saveManualPortfolioBtn.disabled = false;
+                    saveManualPortfolioBtn.innerHTML = '<ion-icon name="save-outline" class="mr-2"></ion-icon>Simpan & Lacak';
+                }
             }
+            // END MODIFIED
 
-            async function savePortfolio(name, stocks, totalCapital) { 
-                // [FIRESTORE]: Menggunakan addDoc untuk menambahkan dokumen baru ke subkoleksi 'portfolios'
-                const portfoliosCollectionRef = collection(db, 'users', userId, 'portfolios');
+            // MODIFIED: Mengubah logika penyimpanan portofolio (menambahkan isCrypto)
+            async function savePortfolio(name, stocks, totalCapital, isCrypto = false) {
+                const portfolioRef = ref(database, `users/${userId}/${isCrypto ? 'crypto_portfolios' : 'portfolios'}`); // NEW PATH
+                const sharesPerLot = 100;
                 
                 const holdings = {};
+                
+                let calculatedInitialInvestment = 0; 
+
                 for (const stock of stocks) {
                     const backendData = await triggerBackendFetch(stock.ticker);
+                    const initialPrice = backendData ? backendData.regularMarketPrice : 0;
+                    
+                    if (initialPrice === 0) {
+                        showModal("Error Data Harga", `Gagal mendapatkan harga terbaru (Rp 0) untuk ${stock.ticker}. Portofolio tidak disimpan.`);
+                        throw new Error(`Harga ${stock.ticker} adalah 0.`);
+                    }
+
+                    const moneyAllocated = totalCapital * (stock.allocation / 100);
+                    let sharesBought;
+                    let initialInvestment;
+
+                    if (!isCrypto) {
+                         // Logic Saham (Perhitungan Lot)
+                        const lotsBought = Math.floor(moneyAllocated / (initialPrice * sharesPerLot));
+                        sharesBought = lotsBought * sharesPerLot;
+                        initialInvestment = sharesBought * initialPrice;
+                    } else {
+                        // Logic Kripto (Tidak ada Lot)
+                        sharesBought = moneyAllocated / initialPrice; // Beli berdasarkan uang yang dialokasikan
+                        initialInvestment = moneyAllocated; // Investasi riil sama dengan yang dialokasikan
+                    }
+                    
+                    calculatedInitialInvestment += initialInvestment; // Akumulasi investasi riil
+
                     holdings[stock.ticker] = {
                         allocation: stock.allocation,
-                        initialPrice: backendData ? backendData.regularMarketPrice : 0,
-                        companyName: backendData ? backendData.companyName : stock.ticker
+                        initialPrice: initialPrice,
+                        companyName: backendData ? backendData.companyName : stock.ticker,
+                        // NEW: Simpan data riil yang tidak akan berubah
+                        sharesBought: sharesBought,
+                        initialInvestment: initialInvestment,
+                        isCrypto: isCrypto // Flag untuk melacak jenis aset
                     };
                 }
 
@@ -1815,61 +2289,92 @@
                     name: name,
                     createdAt: new Date().toISOString(),
                     totalCapital: totalCapital, 
-                    holdings: holdings
+                    calculatedInitialInvestment: calculatedInitialInvestment, 
+                    holdings: holdings,
+                    isCrypto: isCrypto // NEW: Simpan mode portofolio
                 };
 
                 try {
-                    await setDoc(doc(portfoliosCollectionRef), newPortfolio);
+                    await push(portfolioRef, newPortfolio);
                     showModal("Sukses", `Portofolio "${name}" berhasil disimpan. Anda dapat melihatnya di tab Lacak.`);
                     switchTab('track');
                 } catch (error) {
                     console.error("Gagal menyimpan portofolio:", error);
-                    showModal("Error", "Gagal menyimpan portofolio. Coba lagi.");
+                    showModal("Error", "Gagal menyimpan portofolio ke database.");
+                    throw error;
                 }
             }
+            // END MODIFIED
 
+            // MODIFIED: Memuat portofolio berdasarkan mode saat ini
             async function loadAndDisplayPortfolios() {
+                const isCrypto = currentMarketMode === 'crypto';
+                const portfoliosRef = ref(database, `users/${userId}/${isCrypto ? 'crypto_portfolios' : 'portfolios'}`);
+                
                 portfoliosContainer.innerHTML = `<div class="flex justify-center p-8"><div class="loader"></div></div>`;
                 healthCheckResultsContainer.innerHTML = '';
                 
-                // [FIRESTORE]: Mengambil semua dokumen dari subkoleksi 'portfolios'
-                const portfoliosCollectionRef = collection(db, 'users', userId, 'portfolios');
-                const portfolioQuery = query(portfoliosCollectionRef);
-                
                 try {
-                    const querySnapshot = await getDocs(portfolioQuery);
-                    if (querySnapshot.empty) {
+                    const snapshot = await get(portfoliosRef);
+                    if (!snapshot.exists()) {
                         portfoliosContainer.innerHTML = `<div class="text-center text-gray-500 dark:text-gray-400 py-16">
                             <ion-icon name="briefcase-outline" class="text-6xl mx-auto"></ion-icon>
-                            <p class="text-lg mt-4">Anda belum punya portofolio virtual.</p>
+                            <p class="text-lg mt-4">Anda belum punya portofolio virtual di mode ${isCrypto ? 'Kripto' : 'Saham'}.</p>
                             <p class="text-sm">Buat portofolio di menu Lab untuk mulai melacaknya di sini.</p>
                         </div>`;
                         return;
                     }
 
+                    const portfolios = snapshot.val();
                     portfoliosContainer.innerHTML = '';
-                    querySnapshot.forEach(docSnapshot => {
-                        displayPortfolioCard(docSnapshot.id, docSnapshot.data());
-                    });
+                    for (const id in portfolios) {
+                         // Hanya tampilkan portofolio yang sesuai dengan mode saat ini
+                         if (!!portfolios[id].isCrypto === isCrypto) {
+                             await displayPortfolioCard(id, portfolios[id]);
+                         }
+                    }
+                    if (portfoliosContainer.children.length === 0) {
+                         portfoliosContainer.innerHTML = `<div class="text-center text-gray-500 dark:text-gray-400 py-16">
+                            <ion-icon name="briefcase-outline" class="text-6xl mx-auto"></ion-icon>
+                            <p class="text-lg mt-4">Anda belum punya portofolio virtual di mode ${isCrypto ? 'Kripto' : 'Saham'}.</p>
+                            <p class="text-sm">Buat portofolio di menu Lab untuk mulai melacaknya di sini.</p>
+                        </div>`;
+                    }
                 } catch (error) {
-                    console.error("Gagal memuat portofolio (Firestore):", error);
+                    console.error("Gagal memuat portofolio:", error);
                     portfoliosContainer.innerHTML = `<p class="text-center text-red-500">Gagal memuat portofolio.</p>`;
                 }
             }
+            // END MODIFIED
             
+            // MODIFIED: Menyesuaikan tampilan Portfolio Card untuk Kripto/Saham
             async function displayPortfolioCard(id, portfolio) {
                 const card = document.createElement('div');
                 card.className = 'card p-6';
                 card.id = `portfolio-${id}`;
-                // UPDATED CARD HTML TO INCLUDE INITIAL CAPITAL DISPLAY
+                
+                const isCrypto = portfolio.isCrypto || false; // Ambil flag dari data
+                const currency = isCrypto ? '$' : 'Rp';
+                const sharesLabel = isCrypto ? 'Unit' : 'Lembar';
+                
+                const formattedProvidedCapital = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: isCrypto ? 2 : 0 }).format(portfolio.totalCapital || 0);
+                const formattedInitialInvestment = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: isCrypto ? 2 : 0 }).format(portfolio.calculatedInitialInvestment || 0);
+
+                const difference = (portfolio.totalCapital || 0) - (portfolio.calculatedInitialInvestment || 0);
+                const formattedDifference = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: isCrypto ? 2 : 0 }).format(difference);
+
                 card.innerHTML = `<div class="flex justify-between items-center mb-4">
                                       <div>
-                                        <h3 class="text-xl font-bold">${portfolio.name}</h3>
+                                        <h3 class="text-xl font-bold">${portfolio.name} <span class="text-xs text-gray-400">(${isCrypto ? 'KRIPTO' : 'SAHAM'})</span></h3>
                                         <p class="text-xs text-gray-500">Dibuat pada: ${new Date(portfolio.createdAt).toLocaleDateString()}</p>
-                                        <p id="total-initial-value-${id}" class="text-sm font-semibold text-gray-600 dark:text-gray-400 mt-1"><span class="mini-loader"></span></p>
+                                        <div class="mt-2 text-sm">
+                                            <p class="text-gray-600 dark:text-gray-400">Modal Disediakan: <span class="font-semibold">${formattedProvidedCapital}</span></p>
+                                            <p id="total-initial-value-${id}" class="font-semibold text-gray-800 dark:text-gray-200 mt-1">Modal Awal Riil: <span class="mini-loader"></span></p>
+                                            <p class="text-xs text-yellow-600 dark:text-yellow-400 mt-1">Sisa Modal Virtual: ${formattedDifference}</p>
+                                        </div>
                                       </div>
                                       <div class="text-right">
-                                        <p class="text-sm">Total Nilai</p>
+                                        <p class="text-sm">Total Nilai Saat Ini</p>
                                         <p id="total-value-${id}" class="text-2xl font-bold"><span class="mini-loader"></span></p>
                                         <p id="total-pl-${id}" class="text-sm font-semibold"><span class="mini-loader"></span></p>
                                       </div>
@@ -1887,38 +2392,30 @@
                 const holdingsContainer = document.getElementById(`holdings-${id}`);
                 const totalInitialValueEl = document.getElementById(`total-initial-value-${id}`);
                 holdingsContainer.innerHTML = ''; 
-                totalInitialValueEl.innerHTML = `<div class="mini-loader"></div>`;
-
-                const totalCapital = portfolio.totalCapital || 1; // Use stored capital, default to 1 if not present
-                const sharesPerLot = 100;
-                let totalInitialInvestment = 0; // Total money actually spent based on lots bought
+                
+                const isCrypto = portfolio.isCrypto || false;
+                const sharesLabel = isCrypto ? 'Unit' : 'Lembar';
+                const formatOptions = { minimumFractionDigits: isCrypto ? 4 : 0 };
+                
+                let totalInitialInvestment = portfolio.calculatedInitialInvestment || 0; 
                 let totalCurrentInvestmentValue = 0;
-
+                
                 for (const ticker in portfolio.holdings) {
                     const holding = portfolio.holdings[ticker];
-                    const backendData = await triggerBackendFetch(ticker);
+                    // IMPORTANT: TriggerBackendFetch harus menggunakan currentMarketMode yang sesuai
+                    // Karena data holding sudah ada isCrypto, kita bisa membuat fungsi helper untuk API
+                    const backendData = await triggerBackendFetch(ticker); 
                     const currentPrice = backendData ? backendData.regularMarketPrice : holding.initialPrice;
                     
-                    // 1. Calculate the allocated money (Initial Value of Holding)
-                    const moneyAllocated = totalCapital * (holding.allocation / 100);
+                    const sharesBought = holding.sharesBought || 0;
+                    const initialInvestment = holding.initialInvestment || 0; 
                     
-                    const initialPricePerShare = holding.initialPrice;
-                    
-                    // 2. Calculate lots/shares purchased (assuming full lot purchases)
-                    const lotsBought = Math.floor(moneyAllocated / (initialPricePerShare * sharesPerLot));
-                    const sharesBought = lotsBought * sharesPerLot;
-
-                    // 3. Actual Initial Value of the holding (based on shares bought)
-                    const initialValue = sharesBought * initialPricePerShare;
-                    
-                    // 4. Current Value of the holding
                     const currentValue = sharesBought * currentPrice;
 
-                    totalInitialInvestment += initialValue; 
                     totalCurrentInvestmentValue += currentValue;
                     
-                    const pnl = currentValue - initialValue;
-                    const pnlPercent = initialValue > 0 ? (pnl / initialValue) * 100 : 0;
+                    const pnl = currentValue - initialInvestment;
+                    const pnlPercent = initialInvestment > 0 ? (pnl / initialInvestment) * 100 : 0;
                     const pnlColor = pnl >= 0 ? 'text-green-500' : 'text-red-500';
                     const pnlIcon = pnl >= 0 ? 'caret-up' : 'caret-down';
 
@@ -1926,10 +2423,10 @@
                     holdingDiv.className = 'p-3 bg-gray-50 dark:bg-gray-800 rounded-lg flex justify-between items-center text-sm';
                     holdingDiv.innerHTML = `<div>
                                                 <p class="font-bold">${ticker} <span class="font-normal text-gray-500">(${holding.allocation}%)</span></p>
-                                                <p class="text-xs">${new Intl.NumberFormat('id-ID').format(sharesBought)} Lembar (@ ${new Intl.NumberFormat('id-ID').format(holding.initialPrice)})</p>
+                                                <p class="text-xs">${new Intl.NumberFormat('id-ID', formatOptions).format(sharesBought)} ${sharesLabel} (@ ${new Intl.NumberFormat('id-ID', formatOptions).format(holding.initialPrice)})</p>
                                             </div>
                                             <div class="text-right">
-                                                <p class="font-semibold">${new Intl.NumberFormat('id-ID').format(currentPrice)}</p>
+                                                <p class="font-semibold">${new Intl.NumberFormat('id-ID', formatOptions).format(currentPrice)}</p>
                                                 <p class="${pnlColor} flex items-center justify-end gap-1"><ion-icon name="${pnlIcon}"></ion-icon> ${pnlPercent.toFixed(2)}%</p>
                                             </div>`;
                     holdingsContainer.appendChild(holdingDiv);
@@ -1940,38 +2437,44 @@
                 const totalPnlColor = totalPnl >= 0 ? 'text-green-500' : 'text-red-500';
                 const totalPnlIcon = totalPnl >= 0 ? 'caret-up' : 'caret-down';
                 
-                // Update the total initial capital display
-                totalInitialValueEl.textContent = `Modal Awal: Rp ${new Intl.NumberFormat('id-ID').format(totalInitialInvestment)}`;
+                totalInitialValueEl.innerHTML = `Modal Awal Riil: <span class="font-bold">${new Intl.NumberFormat('id-ID', { minimumFractionDigits: isCrypto ? 2 : 0 }).format(totalInitialInvestment)}</span>`;
 
-                document.getElementById(`total-value-${id}`).textContent = `Rp ${new Intl.NumberFormat('id-ID').format(totalCurrentInvestmentValue)}`;
-                document.getElementById(`total-pl-${id}`).innerHTML = `<span class="${totalPnlColor} flex items-center justify-end gap-1"><ion-icon name="${totalPnlIcon}"></ion-icon> ${new Intl.NumberFormat('id-ID').format(totalPnl)} (${totalPnlPercent.toFixed(2)}%)</span>`;
+                document.getElementById(`total-value-${id}`).textContent = `${isCrypto ? '$' : 'Rp'} ${new Intl.NumberFormat('id-ID', { minimumFractionDigits: isCrypto ? 2 : 0 }).format(totalCurrentInvestmentValue)}`;
+                document.getElementById(`total-pl-${id}`).innerHTML = `<span class="${totalPnlColor} flex items-center justify-end gap-1"><ion-icon name="${totalPnlIcon}"></ion-icon> ${new Intl.NumberFormat('id-ID', { minimumFractionDigits: isCrypto ? 2 : 0 }).format(totalPnl)} (${totalPnlPercent.toFixed(2)}%)</span>`;
             }
+            // END MODIFIED
 
             async function deletePortfolio(id) {
-                // [FIRESTORE]: Menghapus dokumen dari subkoleksi 'portfolios'
-                const portfolioDocRef = doc(db, 'users', userId, 'portfolios', id);
+                const isCrypto = currentMarketMode === 'crypto';
+                const portfolioRef = ref(database, `users/${userId}/${isCrypto ? 'crypto_portfolios' : 'portfolios'}/${id}`);
                 try {
-                    await deleteDoc(portfolioDocRef);
+                    await remove(portfolioRef);
                     document.getElementById(`portfolio-${id}`).remove();
                     showModal("Sukses", "Portofolio berhasil dihapus.");
                     if (portfoliosContainer.children.length === 0) {
                         loadAndDisplayPortfolios(); // Reload to show empty message
                     }
                 } catch (error) {
-                    console.error("Gagal menghapus portofolio (Firestore):", error);
-                    showModal("Error", "Gagal menghapus portofolio. Coba lagi.");
+                    console.error("Gagal menghapus portofolio:", error);
+                    showModal("Error", "Gagal menghapus portofolio.");
                 }
             }
 
+            // MODIFIED: Sesuaikan Health Check untuk Kripto
             async function handlePortfolioHealthCheck(portfolioData) {
                 healthCheckResultsContainer.innerHTML = `<div class="flex justify-center p-8"><div class="loader"></div></div>`;
                 const portfolioString = portfolioData.map(p => `${p.ticker} (${p.allocation}%)`).join(', ');
-                const prompt = `Sebagai penasihat keuangan, lakukan analisis "health check" pada portofolio berikut: ${portfolioString}. Berdasarkan data pasar terkini, berikan:
+                
+                const isCrypto = currentMarketMode === 'crypto';
+                const assetLabel = isCrypto ? 'aset kripto' : 'saham';
+                const analysisContext = isCrypto ? 'dinamika pasar kripto, sentimen adopsi, dan tokenomics' : 'fundamental, valuasi, dan makroekonomi';
+
+                const prompt = `Sebagai penasihat keuangan, lakukan analisis "health check" pada portofolio ${assetLabel} berikut: ${portfolioString}. Berdasarkan ${analysisContext} terkini, berikan:
                 1.  **skor_kesehatan**: Angka 1-100.
                 2.  **analisis_risiko**: Satu paragraf singkat tentang risiko utama portofolio ini.
                 3.  **saran_perbaikan**: Array berisi 2-3 saran konkret untuk perbaikan.
-                4.  **saham_terbaik**: Ticker saham dengan kinerja/prospek terbaik.
-                5.  **saham_terlemah**: Ticker saham yang paling berisiko.
+                4.  **saham_terbaik**: Ticker ${assetLabel} dengan kinerja/prospek terbaik.
+                5.  **saham_terlemah**: Ticker ${assetLabel} yang paling berisiko.
                 Format jawaban sebagai JSON.`;
 
                 const schema = {
@@ -1989,12 +2492,16 @@
                 const data = await fetchFromGemini(prompt, schema);
                 displayHealthCheckResults(data);
             }
+            // END MODIFIED
 
             function displayHealthCheckResults(data) {
                 if (!data) {
                     healthCheckResultsContainer.innerHTML = `<p class="text-center">Gagal menganalisis portofolio.</p>`;
                     return;
                 }
+                
+                const isCrypto = currentMarketMode === 'crypto';
+                const assetLabel = isCrypto ? 'Aset Kripto' : 'Saham';
 
                 let scoreColor;
                 if (data.skor_kesehatan >= 75) scoreColor = 'text-green-500';
@@ -2022,12 +2529,14 @@
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                                 <div class="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                                    <h5 class="font-bold text-green-700 dark:text-green-300 flex items-center gap-2"><ion-icon name="trophy-outline"></ion-icon> Saham Terbaik</h5>
+                                    <h5 class="font-bold text-green-700 dark:text-green-300 flex items-center gap-2"><ion-icon name="trophy-outline"></ion-icon> ${assetLabel} Terbaik</h5>
                                     <p class="text-2xl font-bold">${data.saham_terbaik}</p>
+                                    <button class="goto-analysis-btn bg-blue-500 hover:bg-blue-600 text-white font-bold py-1.5 px-4 rounded-full text-xs mt-2" data-ticker="${data.saham_terbaik}">Analisis</button>
                                 </div>
                                 <div class="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
                                     <h5 class="font-bold text-red-700 dark:text-red-300 flex items-center gap-2"><ion-icon name="warning-outline"></ion-icon> Perlu Diwaspadai</h5>
                                     <p class="text-2xl font-bold">${data.saham_terlemah}</p>
+                                    <button class="goto-analysis-btn bg-blue-500 hover:bg-blue-600 text-white font-bold py-1.5 px-4 rounded-full text-xs mt-2" data-ticker="${data.saham_terlemah}">Analisis</button>
                                 </div>
                             </div>
                         </div>
@@ -2035,31 +2544,127 @@
                 `;
             }
 
-            function renderIpoCards() {
-                const toDisplay = ipoList.slice(0, displayedIpoCount + ipoBatchSize);
-                ipoAnalysisContainer.innerHTML = ''; // Clear previous cards
-                toDisplay.forEach(ipo => {
-                    const statusColor = ipo.status === 'Sudah Listing' ? 'bg-gray-400' : (ipo.status === 'Masa Penawaran' ? 'bg-green-500' : 'bg-blue-500');
-                    const card = `
-                        <div class="card p-4">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <h4 class="text-lg font-bold">${ipo.ticker}</h4>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400">${ipo.name}</p>
-                                </div>
-                                <span class="text-xs font-semibold text-white ${statusColor} px-2.5 py-1 rounded-full">${ipo.status}</span>
-                            </div>
-                            <div class="mt-4 text-center">
-                                <button class="ipo-analysis-btn bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 font-semibold py-2 px-4 rounded-full text-sm w-full hover:bg-blue-200 dark:hover:bg-blue-800" data-company="${ipo.name}">Dapatkan Analisis AI</button>
-                            </div>
-                        </div>`;
-                    ipoAnalysisContainer.insertAdjacentHTML('beforeend', card);
-                });
-                displayedIpoCount = toDisplay.length;
-                loadMoreIpoBtn.style.display = displayedIpoCount >= ipoList.length ? 'none' : 'inline-block';
+            // MODIFIED: Sesuaikan Debate Generation untuk Kripto
+            async function handleDebateGeneration() {
+                if (!currentAnalysisTicker) {
+                    showModal("Pilih Aset", "Silakan pilih aset (saham atau kripto) dari tab lain untuk memulai debat.");
+                    return;
+                }
+                startDebateBtn.disabled = true;
+                debateResultsContainer.innerHTML = `<div class="flex justify-center p-8"><div class="loader"></div></div>`;
+                
+                const isCrypto = currentMarketMode === 'crypto';
+                const assetLabel = isCrypto ? 'aset kripto' : 'saham';
+                const analysisContext = isCrypto ? 'teknikal dan sentimen pasar kripto' : 'fundamental dan prospek makro';
+
+                const prompt = `Bertindak sebagai dua analis keuangan ahli dengan pandangan berlawanan untuk ${assetLabel} ${currentAnalysisTicker}.
+                - **Analis Bull**: Berikan 3 poin utama mengapa aset ini layak dibeli, didukung oleh ${analysisContext} positif.
+                - **Analis Bear**: Berikan 3 poin utama mengapa investor harus berhati-hati atau menjual aset ini, didukung oleh ${analysisContext} negatif.
+                Format jawaban sebagai JSON dengan kunci "bull_arguments" (array string) dan "bear_arguments" (array string).`;
+
+                const schema = {
+                    type: "OBJECT",
+                    properties: {
+                        bull_arguments: { type: "ARRAY", items: { type: "STRING" } },
+                        bear_arguments: { type: "ARRAY", items: { type: "STRING" } }
+                    },
+                    required: ["bull_arguments", "bear_arguments"]
+                };
+
+                const data = await fetchFromGemini(prompt, schema);
+                displayDebateResults(data);
+                startDebateBtn.disabled = false;
+            }
+            // END MODIFIED
+
+            function displayDebateResults(data) {
+                if (!data || !data.bull_arguments || !data.bear_arguments) {
+                    debateResultsContainer.innerHTML = `<p class="text-center">Gagal memuat data debat.</p>`;
+                    return;
+                }
+                
+                const bullHTML = data.bull_arguments.map(arg => `<li class="flex items-start gap-2"><ion-icon name="trending-up-outline" class="text-green-500 text-2xl flex-shrink-0"></ion-icon><span>${arg}</span></li>`).join('');
+                const bearHTML = data.bear_arguments.map(arg => `<li class="flex items-start gap-2"><ion-icon name="trending-down-outline" class="text-red-500 text-2xl flex-shrink-0"></ion-icon><span>${arg}</span></li>`).join('');
+
+                debateResultsContainer.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-left text-sm">
+                        <div class="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                            <h4 class="font-bold text-lg text-green-700 dark:text-green-300 mb-3">Argumen Bull (Optimis)</h4>
+                            <ul class="space-y-3">${bullHTML}</ul>
+                        </div>
+                        <div class="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                            <h4 class="font-bold text-lg text-red-700 dark:text-red-300 mb-3">Argumen Bear (Pesimis)</h4>
+                            <ul class="space-y-3">${bearHTML}</ul>
+                        </div>
+                    </div>
+                `;
             }
 
-            function populateSectors() {
+            function renderIpoCards() {
+            // MODIFIED: Hanya tampilkan jika mode saham
+            if (currentMarketMode === 'crypto') {
+                ipoAnalysisContainer.innerHTML = `<p class="text-center text-gray-500 dark:text-gray-400">Analisis IPO hanya tersedia dalam Mode Saham.</p>`;
+                loadMoreIpoBtn.style.display = 'none';
+                return;
+            }
+            
+            const toDisplay = fetchedIpoList.slice(0, displayedIpoCount + ipoBatchSize);
+            ipoAnalysisContainer.innerHTML = ''; 
+            
+            if (toDisplay.length === 0 && fetchedIpoList.length === 0) {
+                ipoAnalysisContainer.innerHTML = `<p class="text-center text-gray-500 dark:text-gray-400">Belum ada data IPO yang tersedia dari admin.</p>`;
+                loadMoreIpoBtn.style.display = 'none';
+                return;
+            }
+
+            toDisplay.forEach(ipo => {
+                const status = ipo.offeringPeriod;
+                const statusColor = status.toLowerCase().includes('sudah listing') ? 'bg-gray-400' : (status.toLowerCase().includes('penawaran') ? 'bg-green-500' : 'bg-blue-500');
+                const card = `
+                    <div class="card p-4">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="text-lg font-bold">${ipo.ticker}</h4>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">${ipo.companyName}</p>
+                            </div>
+                            <span class="text-xs font-semibold text-white ${statusColor} px-2.5 py-1 rounded-full">${status}</span>
+                        </div>
+                        <div class="mt-4 text-center">
+                            <button class="ipo-analysis-btn bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 font-semibold py-2 px-4 rounded-full text-sm w-full hover:bg-blue-200 dark:hover:bg-blue-800" data-company="${ipo.companyName}">Dapatkan Analisis AI</button>
+                        </div>
+                    </div>`;
+                ipoAnalysisContainer.insertAdjacentHTML('beforeend', card);
+            });
+            displayedIpoCount = toDisplay.length;
+            loadMoreIpoBtn.style.display = displayedIpoCount >= fetchedIpoList.length ? 'none' : 'inline-block';
+        }
+        // AKHIR MODIFIKASI
+
+        async function loadIpoData() {
+            const ipoListRef = ref(database, 'ipo_list');
+            ipoAnalysisContainer.innerHTML = `<div class="flex justify-center p-8"><div class="loader"></div></div>`;
+            try {
+                const snapshot = await get(ipoListRef);
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    fetchedIpoList = Object.keys(data).map(key => ({
+                        id: key,
+                        ...data[key]
+                    }));
+                    fetchedIpoList.reverse();
+                } else {
+                    fetchedIpoList = [];
+                }
+            } catch (error) {
+                console.error("Gagal memuat data IPO:", error);
+                fetchedIpoList = [];
+                ipoAnalysisContainer.innerHTML = `<p class="text-center text-red-500">Gagal memuat data IPO.</p>`;
+            }
+            displayedIpoCount = 0;
+            renderIpoCards();
+        }
+
+        function populateSectors() {
                 const sectors = [
                     "Energi", "Barang Baku", "Perindustrian", "Barang Konsumen Primer",
                     "Barang Konsumen Non-Primer", "Kesehatan", "Keuangan", "Properti & Real Estat",
@@ -2080,62 +2685,74 @@
             }
 
             loadMoreIpoBtn.addEventListener('click', renderIpoCards);
-            
-            // --- WATCHLIST FUNCTIONS (MENGGUNAKAN FIRESTORE) ---
-            
+        
+        // --- WATCHLIST FUNCTIONS ---
+            // MODIFIED: Watchlist sekarang menyimpan data yang spesifik per mode
             async function loadWatchlist() {
-                // [FIRESTORE - FIX]: Menggunakan 2 segmen path (Collection/Document)
-                const userDataDocRef = doc(db, 'users', userId);
+                const watchlistRef = ref(database, `users/${userId}/watchlist`);
                 try {
-                    const docSnap = await getDoc(userDataDocRef);
-                    if (docSnap.exists() && docSnap.data().watchlist) {
-                        watchlist = docSnap.data().watchlist;
+                    const snapshot = await get(watchlistRef);
+                    if (snapshot.exists()) {
+                        const allWatchlist = snapshot.val();
+                        // Filter watchlist berdasarkan mode saat ini
+                        const isCrypto = currentMarketMode === 'crypto';
+                        watchlist = Object.keys(allWatchlist)
+                            .filter(ticker => allWatchlist[ticker].isCrypto === isCrypto)
+                            .map(ticker => ticker); // Ambil hanya array of ticker
                     } else {
-                        // Inisialisasi dokumen jika belum ada
-                        // Gunakan merge: true untuk menambahkan field 'watchlist' tanpa menimpa 'name' dan 'email'
-                        await setDoc(userDataDocRef, { watchlist: [] }, { merge: true }); 
                         watchlist = [];
                     }
                 } catch (error) {
-                    console.error("Gagal memuat watchlist (Firestore):", error);
-                    // Tambahkan penanganan untuk izin yang hilang
-                    if (error.code === 'permission-denied' || error.message.includes('permissions')) {
-                        showModal("Akses Ditolak", "Gagal memuat Watchlist. Pastikan Anda telah mengatur Izin Keamanan (Security Rules) Firestore untuk mengizinkan pengguna mengakses data mereka di koleksi 'users/{userId}'.");
-                    }
+                    console.error("Gagal memuat watchlist:", error);
                     watchlist = [];
                 }
                 updateWatchlistIcons();
             }
 
-            async function saveWatchlist() {
-                // [FIRESTORE - FIX]: Menggunakan 2 segmen path (Collection/Document)
-                const userDataDocRef = doc(db, 'users', userId);
+            async function saveWatchlist(ticker, isCrypto, companyName) {
+                const watchlistRef = ref(database, `users/${userId}/watchlist/${ticker}`);
                 try {
-                    // [FIRESTORE]: Memperbarui field watchlist di dokumen
-                    await setDoc(userDataDocRef, { watchlist: watchlist }, { merge: true });
-                } catch (error) {
-                    console.error("Gagal menyimpan watchlist (Firestore):", error);
-                    if (error.code === 'permission-denied' || error.message.includes('permissions')) {
-                         showModal("Akses Ditolak", "Gagal menyimpan Watchlist. Harap periksa Izin Keamanan (Security Rules) Firestore Anda.");
+                    if (watchlist.includes(ticker)) {
+                        // Jika sudah ada, hapus
+                        await remove(watchlistRef);
+                        watchlist = watchlist.filter(t => t !== ticker);
+                    } else {
+                        // Jika belum ada, tambahkan
+                        await set(watchlistRef, { 
+                            isCrypto: isCrypto, 
+                            companyName: companyName,
+                            addedAt: new Date().toISOString()
+                        });
+                        watchlist.push(ticker);
                     }
+                } catch (error) {
+                    console.error("Gagal menyimpan watchlist:", error);
                 }
             }
 
             function toggleWatchlist(ticker) {
-                const index = watchlist.indexOf(ticker);
-                if (index > -1) {
-                    watchlist.splice(index, 1); // Remove
-                } else {
-                    watchlist.push(ticker); // Add
+                const isCrypto = currentMarketMode === 'crypto';
+                
+                // Cari nama perusahaan/koin untuk disimpan
+                let companyName = ticker;
+                const priceInput = document.getElementById(`price-input-${ticker}`);
+                if (priceInput && priceInput.closest('.card')) {
+                    const card = priceInput.closest('.card');
+                    const companyNameEl = card.querySelector('.text-md');
+                    if (companyNameEl) {
+                        companyName = companyNameEl.textContent;
+                    }
                 }
-                saveWatchlist();
+                
+                saveWatchlist(ticker, isCrypto, companyName);
                 updateWatchlistIcons();
                 if (document.getElementById('track-tab-content').offsetParent !== null) {
                     renderWatchlistPage();
                 }
             }
-
+            
             function updateWatchlistIcons() {
+                // Saat ini, ikon hanya dapat berubah di mode yang sama saat item dimuat
                 document.querySelectorAll('.add-to-watchlist-btn').forEach(btn => {
                     const ticker = btn.dataset.ticker;
                     const icon = btn.querySelector('ion-icon');
@@ -2152,12 +2769,17 @@
             async function renderWatchlistPage() {
                 const container = document.getElementById('watchlist-results-container');
                 document.getElementById('watchlist-summary-container').innerHTML = ''; // Clear summary
+                
+                // Re-load watchlist untuk memastikan data terbaru sesuai mode
+                await loadWatchlist(); 
+                
                 container.innerHTML = '';
                 if (watchlist.length === 0) {
+                    const isCrypto = currentMarketMode === 'crypto';
                     container.innerHTML = `<div class="text-center text-gray-500 dark:text-gray-400 py-16">
                         <ion-icon name="bookmark-outline" class="text-6xl mx-auto"></ion-icon>
-                        <p class="text-lg mt-4">Watchlist Anda kosong.</p>
-                        <p class="text-sm">Tambahkan saham dengan menekan ikon <ion-icon name="bookmark-outline"></ion-icon> pada kartu saham.</p>
+                        <p class="text-lg mt-4">Watchlist ${isCrypto ? 'Kripto' : 'Saham'} Anda kosong.</p>
+                        <p class="text-sm">Tambahkan aset dengan menekan ikon <ion-icon name="bookmark-outline"></ion-icon> pada kartu aset.</p>
                     </div>`;
                     return;
                 }
@@ -2165,6 +2787,10 @@
                 container.innerHTML = `<div class="flex justify-center p-8"><div class="loader"></div></div>`;
                 const stockDataPromises = watchlist.map(ticker => triggerBackendFetch(ticker));
                 const stocksData = await Promise.all(stockDataPromises);
+                
+                const isCrypto = currentMarketMode === 'crypto';
+                const currency = isCrypto ? '$' : 'Rp';
+                const formatOptions = { minimumFractionDigits: isCrypto ? 4 : 0 };
                 
                 container.innerHTML = '';
                 stocksData.forEach((stock, index) => {
@@ -2176,7 +2802,7 @@
                             <div class="flex items-center justify-between">
                                 <div class="flex-grow">
                                     <h4 class="text-lg font-bold">${stock.companyName} (${ticker})</h4>
-                                    <p class="text-xl font-semibold text-blue-600 dark:text-blue-400">Rp ${new Intl.NumberFormat('id-ID').format(stock.regularMarketPrice)}</p>
+                                    <p class="text-xl font-semibold text-blue-600 dark:text-blue-400">${currency} ${new Intl.NumberFormat('id-ID', formatOptions).format(stock.regularMarketPrice)}</p>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <button class="goto-analysis-btn bg-blue-500 hover:bg-blue-600 text-white font-bold py-1.5 px-4 rounded-full text-xs" data-ticker="${ticker}">Analisis</button>
@@ -2200,7 +2826,11 @@
                     return;
                 }
                 
-                const prompt = `Berdasarkan berita pasar dan data ekonomi terkini untuk hari ini, berikan ringkasan harian singkat (maksimal 2 kalimat per saham) untuk saham-saham berikut di watchlist saya: ${watchlist.join(', ')}. Fokus pada berita signifikan, sinyal teknikal penting, atau rumor yang dapat memengaruhi harga. Format sebagai JSON: { "ringkasan_umum": "...", "detail_saham": [{"ticker": "...", "ringkasan": "..."}] }`;
+                const isCrypto = currentMarketMode === 'crypto';
+                const assetLabel = isCrypto ? 'aset kripto' : 'saham';
+                const analysisContext = isCrypto ? 'pasar kripto' : 'pasar BEI';
+                
+                const prompt = `Berdasarkan berita ${analysisContext} dan data ekonomi terkini untuk hari ini, berikan ringkasan harian singkat (maksimal 2 kalimat per ${assetLabel}) untuk ${assetLabel} berikut di watchlist saya: ${watchlist.join(', ')}. Fokus pada berita signifikan, sinyal teknikal penting, atau rumor yang dapat memengaruhi harga. Format sebagai JSON: { "ringkasan_umum": "...", "detail_saham": [{"ticker": "...", "ringkasan": "..."}] }`;
                 const schema = {
                     type: "OBJECT",
                     properties: {
@@ -2245,59 +2875,70 @@
 
             // --- END WATCHLIST FUNCTIONS ---
             
-            // --- FITUR BARU: Fungsi untuk membandingkan saham ---
+            // MODIFIED: Fungsi untuk membandingkan saham, menggunakan mode saat ini
             async function handleCompareStocks() {
                 const inputs = document.querySelectorAll('.compare-input');
                 const tickers = Array.from(inputs).map(input => input.value.trim().toUpperCase()).filter(Boolean);
                 const resultsContainer = document.getElementById('compare-results-container');
+                
+                const isCrypto = currentMarketMode === 'crypto';
 
                 if (tickers.length < 2) {
-                    showModal("Input Kurang", "Mohon masukkan setidaknya 2 ticker saham untuk dibandingkan.");
+                    showModal("Input Kurang", `Mohon masukkan setidaknya 2 ticker ${isCrypto ? 'kripto' : 'saham'} untuk dibandingkan.`);
                     return;
                 }
 
                 resultsContainer.innerHTML = `<div class="flex justify-center p-8"><div class="loader"></div></div>`;
-
+                
+                // Panggil fungsi fundamental/metrik yang sesuai
                 const dataPromises = tickers.map(async (ticker) => {
-                    // Re-use fetchDataAndDisplay logic for fundamental metrics
-                    const prompt = `Berikan data fundamental utama untuk ${ticker}: Market Cap, P/E Ratio (TTM), EPS (TTM), ROE, P/B Ratio, Dividend Yield. Format sebagai JSON array: [{"metrik": "...", "nilai": "..."}].`;
-                    const schema = { type: "ARRAY", items: { type: "OBJECT", properties: { "metrik": { type: "STRING" }, "nilai": { type: "STRING" } }, required: ["metrik", "nilai"] } };
-                    const fundamentalData = await fetchFromGemini(prompt, schema);
+                    const fundamentalData = isCrypto ? await fetchCryptoMetrics(ticker) : await fetchFundamentalData(ticker); 
                     return { ticker, fundamentalData };
                 });
 
                 const allData = await Promise.all(dataPromises);
                 
-                const metrics = ["Market Cap", "P/E Ratio (TTM)", "P/B Ratio", "ROE", "Dividend Yield"];
+                const allLabels = new Set();
+                allData.forEach(data => {
+                    data.fundamentalData?.forEach(m => allLabels.add(m.label));
+                });
+                const sortedLabels = Array.from(allLabels).sort();
+                
                 let tableHTML = `
                     <div class="card p-4 overflow-x-auto">
                         <table class="w-full text-sm text-left">
                             <thead class="text-xs uppercase bg-gray-50 dark:bg-gray-700">
                                 <tr>
-                                    <th scope="col" class="px-6 py-3 rounded-l-lg">Metrik</th>
+                                    <th scope="col" class="px-6 py-3 rounded-l-lg">${isCrypto ? 'Metrik Kripto' : 'Metrik Saham'}</th>
                                     ${tickers.map(ticker => `<th scope="col" class="px-6 py-3 text-center">${ticker}</th>`).join('')}
                                 </tr>
                             </thead>
                             <tbody>`;
                 
-                const comparisonData = {};
-                tickers.forEach(ticker => comparisonData[ticker] = {});
+                const comparisonDataForAI = {};
+                tickers.forEach(ticker => comparisonDataForAI[ticker] = {});
 
-                metrics.forEach(metric => {
+                sortedLabels.forEach(label => {
                     tableHTML += `<tr class="bg-white dark:bg-gray-800 border-b dark:border-gray-700">
-                                    <th scope="row" class="px-6 py-4 font-medium whitespace-nowrap">${metric}</th>`;
+                                    <th scope="row" class="px-6 py-4 font-medium whitespace-nowrap">${label}</th>`;
                     allData.forEach(({ ticker, fundamentalData }) => {
-                        const metricData = fundamentalData ? fundamentalData.find(m => m.metrik === metric) : null;
+                        const metricData = fundamentalData ? fundamentalData.find(m => m.label === label) : null;
                         const value = metricData ? metricData.nilai : 'N/A';
                         tableHTML += `<td class="px-6 py-4 text-center">${value}</td>`;
-                        comparisonData[ticker][metric] = value;
+                        
+                        if(metricData?.key) {
+                            comparisonDataForAI[ticker][metricData.key] = value;
+                        } else {
+                            comparisonDataForAI[ticker][label] = value;
+                        }
                     });
                     tableHTML += `</tr>`;
                 });
 
                 tableHTML += `</tbody></table></div>`;
                 
-                const prompt = `Sebagai analis keuangan, berikan kesimpulan perbandingan singkat antara saham berikut berdasarkan data fundamental ini: ${JSON.stringify(comparisonData)}. Fokus pada saham mana yang lebih unggul untuk investor tipe value dan mana yang lebih cocok untuk investor tipe growth. Berikan jawaban dalam format JSON: { "kesimpulan": "...", "untuk_value": "...", "untuk_growth": "..." }`;
+                // Prompt AI menggunakan data yang sudah distrukturkan (comparisonDataForAI)
+                const prompt = `Sebagai analis keuangan, berikan kesimpulan perbandingan singkat antara ${isCrypto ? 'aset kripto' : 'saham'} berikut berdasarkan data fundamental/metrik ini: ${JSON.stringify(comparisonDataForAI)}. Fokus pada ${isCrypto ? 'aset' : 'saham'} mana yang lebih unggul untuk investor tipe value dan mana yang lebih cocok untuk investor tipe growth. Berikan jawaban dalam format JSON: { "kesimpulan": "...", "untuk_value": "...", "untuk_growth": "..." }`;
                 const schema = {
                     type: "OBJECT",
                     properties: {
@@ -2331,6 +2972,7 @@
 
                 resultsContainer.innerHTML = tableHTML;
             }
+            // END MODIFIED
 
             // --- SUB-TAB SWITCHING LOGIC ---
             function setupSubTabSwitching(containerSelector, buttonSelector, contentIds) {
@@ -2364,14 +3006,11 @@
             setupSubTabSwitching('#track-tab-content', '.sub-tab-btn', ['portfolio-sub-content', 'watchlist-sub-content']);
             setupSubTabSwitching('#analysis-tab-content', '.sub-tab-btn', ['direct-analysis-sub-content', 'compare-stocks-sub-content']);
 
-            // initializeEducationModule function and related sub-functions removed
-
             // Initialize the app
-            loadWatchlist();
-            switchTab('discovery');
-            populateSectors();
-            renderIpoCards();
-            // initializeEducationModule(); // Dihapus
+        loadWatchlist();
+        switchTab('discovery');
+        populateSectors();
+        loadIpoData(); 
         }
     </script>
 
