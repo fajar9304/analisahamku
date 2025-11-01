@@ -1,140 +1,160 @@
-// === ANALISAHAMKU v3 - Server Terpadu ===
-// Fungsi: Scraper (Yahoo Finance), AI Analysis (Gemini), Caching (RTDB), & Proxy Aman AI.
-// VERSI ADAPTASI: Menggunakan Scraper v3.1 (dengan fallback)
-
 import express from "express";
 import cors from "cors";
-import cron from "node-cron";
-// import fetch from "node-fetch"; // <-- DIHAPUS: Gunakan fetch bawaan Node.js v18+
-import { initializeApp } from "firebase/app";
-// Hapus getAuth, signInAnonymously karena server tidak memerlukan autentikasi Anonim lagi
-import { getDatabase, ref, set } from "firebase/database";
+import fetch from "node-fetch";
+import * as dotenv from 'dotenv';
 
-// --- KONFIGURASI ENV & FIREBASE ---
-// ... (sisa kode tidak berubah) ...
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "AIzaSyDWDY9e36xDuNdtd36DCSloDqO5zwvq_8w"; // Gunakan ENV atau fallback
-// ... (sisa kode tidak berubah) ...
-const firebaseConfig = {
-  apiKey: "AIzaSyCCV7FD5FQqVW1WnP-Zu6UWAhAz19dthso",
-// ... (sisa kode tidak berubah) ...
-  databaseURL: "https://analisahamku-default-rtdb.asia-southeast1.firebasedatabase.app",
-};
+// Muat variabel lingkungan dari file .env
+dotenv.config();
 
-// --- LIST SAHAM & KRIPTO ---
-// ... (sisa kode tidak berubah) ...
-const ALL_TICKERS = [...STOCK_TICKERS, ...CRYPTO_TICKERS];
-
-// --- INISIALISASI SERVER & FIREBASE ---
+// === KONFIGURASI ===
 const app = express();
-// ... (sisa kode tidak berubah) ...
-const db = getDatabase(firebaseApp);
+app.use(cors());
+app.use(express.json());
 
-// --- UTILS ---
-function delay(ms) {
-// ... (sisa kode tidak berubah) ...
-}
+const PORT = process.env.PORT || 3000;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY; // AMAN
+const GEMINI_MODEL = "gemini-2.5-flash-preview-09-2025"; // Model yang mendukung grounding & JSON
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
 
-// --- SCRAPER YAHOO FINANCE (VERSI ADAPTASI V3.1 - DENGAN FALLBACK) ---
+// === FUNGSI UTILITAS (DARI KODE LAMA ANDA) ===
+// Fungsi ini sempurna untuk mengambil data harga, kita akan mempertahankannya.
 async function getAssetPriceData(ticker) {
-  try {
-    // 1️⃣ Coba ambil via quoteSummary
-// ... (sisa kode tidak berubah) ...
-        };
-      }
-    }
+  try {
+    // 1️⃣ Coba ambil via quoteSummary
+    const url1 = `https://query2.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(
+      ticker
+    )}?modules=price`;
+    const r1 = await fetch(url1, { headers: { "User-Agent": "Mozilla/5.0" } });
+    if (r1.ok) {
+      const j1 = await r1.json();
+      const p = j1?.quoteSummary?.result?.[0]?.price;
+      if (p && p.regularMarketPrice) {
+        return {
+          symbol: p.symbol,
+          shortName: p.shortName || p.longName || p.symbol,
+          currency: p.currency,
+          regularMarketPrice: p.regularMarketPrice.raw,
+          regularMarketChangePercent: p.regularMarketChangePercent?.fmt ?? "0%",
+        };
+      }
+    }
 
-    // 2️⃣ Fallback ke chart endpoint (Jika quoteSummary gagal atau tidak ada harga)
-// ... (sisa kode tidak berubah) ...
-      regularMarketChangePercent: "0.00%", // Fallback tidak menyediakan % change
-    };
-  } catch (e) {
-// ... (sisa kode tidak berubah) ...
-    return null;
-  }
+    // 2️⃣ Fallback ke chart endpoint
+    const url2 = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?region=US&lang=en-US`;
+    const r2 = await fetch(url2, { headers: { "User-Agent": "Mozilla/5.0" } });
+    if (!r2.ok) return null;
+
+    const j2 = await r2.json();
+    const meta = j2?.chart?.result?.[0]?.meta;
+    if (!meta) return null;
+
+    return {
+      symbol: meta.symbol,
+      shortName: meta.instrumentDisplayName || meta.symbol,
+      currency: meta.currency,
+      regularMarketPrice: meta.regularMarketPrice,
+      regularMarketChangePercent: "0.00%", // Fallback tidak menyediakan ini
+    };
+  } catch (e) {
+    console.error(`❌ Gagal ambil data ${ticker}:`, e);
+    return null;
+  }
 }
 
-
-// --- ANALISIS AI (GEMINI) UNTUK CRON JOB ---
-async function getAiAnalysis(name, isCrypto) {
-// ... (sisa kode tidak berubah) ...
-      body: JSON.stringify(payload),
-    });
-
-    if (!res.ok) {
-// ... (sisa kode tidak berubah) ...
-      return `Analisis AI tidak tersedia untuk ${name}.`;
-    }
-
-    const data = await res.json();
-// ... (sisa kode tidak berubah) ...
-    return text || `Analisis AI tidak tersedia untuk ${name}.`;
-  } catch (e) {
-    console.error(`[AI ERROR] ${name}:`, e);
-// ... (sisa kode tidak berubah) ...
-  }
-}
-
-// --- ENGINE UTAMA ---
-async function runAnalysisEngine() {
-// ... (sisa kode tidak berubah) ...
-        .replace("-", "_")}`;
-      await set(ref(db, path), combined);
-      console.log(`✅ ${ticker} berhasil disimpan ke Firebase.`);
-// ... (sisa kode tidak berubah) ...
-    }
-
-    await delay(2500); // beri jeda antar permintaan AI untuk menghindari limit
-  }
-// ... (sisa kode tidak berubah) ...
-}
-
-// --- API REALTIME (Data Harga & Ringkasan AI dari Cache) ---
-// Frontend (analisahamku.html) akan memanggil endpoint ini untuk data harga.
+// === ENDPOINT 1: API HARGA ===
+// Endpoint ini dicocokkan dengan PRICE_API_URL di aplikasi Anda
 app.get("/api/:symbol", async (req, res) => {
-// ... (sisa kode tidak berubah) ...
-        // Format respons kompatibel dengan struktur lama (PENTING)
-        chart: { result: [{ meta: { regularMarketPrice: price.regularMarketPrice, instrumentDisplayName: price.shortName } }] }
+  const { symbol } = req.params;
+  const data = await getAssetPriceData(symbol);
+  if (!data) {
+    return res.status(404).json({ error: `Data tidak ditemukan: ${symbol}` });
+  }
+  
+  // HANYA mengembalikan data harga (tanpa AI), ini membuat aplikasi lebih cepat
+  // Aplikasi akan memanggil endpoint AI secara terpisah jika perlu.
+  res.json(data);
+});
+
+// === ENDPOINT 2: PROXY AI GEMINI ===
+// Endpoint ini dicocokkan dengan RENDER_AI_PROXY_URL di aplikasi Anda
+app.post("/api/gemini-proxy", async (req, res) => {
+  if (!GEMINI_API_KEY) {
+    return res.status(500).json({ error: "Kunci API Gemini belum diatur di server." });
+  }
+
+  const { prompt, schema } = req.body;
+
+  if (!prompt) {
+    return res.status(400).json({ error: "Prompt tidak boleh kosong." });
+  }
+
+  // 1. Siapkan payload dasar
+  const payload = {
+    contents: [{ parts: [{ text: prompt }] }],
+    // 2. SELALU aktifkan alat Google Search (grounding)
+    // Ini akan memberdayakan SEMUA fitur AI (screener, analisis, dll)
+    // dengan data web real-time.
+    tools: [{ "google_search": {} }], 
+  };
+
+  // 3. Jika ada skema, tambahkan ke payload
+  if (schema) {
+    try {
+      const parsedSchema = JSON.parse(schema);
+      payload.generationConfig = {
+        responseMimeType: "application/json",
+        responseSchema: parsedSchema
+      };
+    } catch (e) {
+      console.error("Skema JSON tidak valid:", e);
+      return res.status(400).json({ error: "Skema JSON tidak valid." });
+    }
+  }
+
+  // 4. Panggil Google Gemini
+  try {
+    const response = await fetch(GEMINI_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
     });
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error("Error dari Gemini:", errorData);
+      return res.status(response.status).json({ error: `Error dari Gemini: ${errorData}` });
+    }
+
+    const data = await response.json();
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (!text) {
+      console.error("Respon Gemini tidak valid:", data);
+      return res.status(500).json({ error: "Respon tidak valid dari AI." });
+    }
+
+    // 5. Kembalikan dalam format yang diharapkan aplikasi: { text: "..." }
+    res.json({ text: text });
+
+  } catch (error) {
+    console.error("Error saat memanggil Gemini Proxy:", error);
+    res.status(500).json({ error: "Gagal menghubungi server AI." });
+  }
 });
 
+// === KEEP ALIVE (DARI KODE LAMA ANDA) ===
+// Ini penting untuk layanan gratis di Render agar tidak tidur
+setInterval(() => {
+  // Ganti URL ini dengan URL Render Anda sendiri setelah deploy
+  fetch("https://analisahamku-server-baru.onrender.com/") 
+    .catch(() => console.log("[PING] Render tetap hidup."));
+}, 12 * 60 * 1000); // Setiap 12 menit
 
-// --- API PROXY GEMINI AMAN (MENGGANTIKAN LOGIKA TOKEN LAMA) ---
-// Frontend (analisahamku.html) akan memanggil endpoint ini untuk semua analisis mendalam.
-app.post('/api/gemini-proxy', async (req, res) => {
-// ... (sisa kode tidak berubah) ...
-                details: errorDetails 
-            });
-        }
-        
-        const geminiResult = await geminiResponse.json();
-        const textData = geminiResult.candidates?.[0]?.content?.parts?.[0]?.text;
-
-        if (!textData) {
-// ... (sisa kode tidak berubah) ...
-        }
-
-        // Mengembalikan hasil dalam format { text: "..." }
-        res.json({ text: textData });
-
-    } catch (error) {
-// ... (sisa kode tidak berubah) ...
-        res.status(500).json({ error: 'Internal server error during API call.' });
-    }
-});
-
-// --- KEEP ALIVE UNTUK RENDER ---
-// ... (sisa kode tidak berubah) ...
-    .catch(() => console.log("[PING] Gagal menjaga koneksi aktif."));
-}, 12 * 60 * 1000); // setiap 12 menit
-
-// --- START SERVER ---
-app.get("/", (req, res) =>
-  res.send("✅ Server Analisa Saham & Crypto v3.1 (Adapted) Aktif!")
-);
-
+// === START SERVER ===
+app.get("/", (req, res) => res.send("✅ Server Terpadu Analisahamku v1.0 aktif."));
 app.listen(PORT, () => {
-// ... (sisa kode tidak berubah) ...
-  cron.schedule("0 * * * *", runAnalysisEngine); // jalan tiap jam
-  console.log("Penjadwal analisis aktif (tiap jam).");
+  console.log(`Server berjalan di port ${PORT}`);
+  if (!GEMINI_API_KEY) {
+    console.warn("⚠️ PERINGATAN: GEMINI_API_KEY belum diatur. Endpoint /api/gemini-proxy akan gagal.");
+  }
 });
-
