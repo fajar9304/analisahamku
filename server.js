@@ -105,6 +105,10 @@ app.post("/api/gemini-proxy", async (req, res) => {
         responseMimeType: "application/json",
         responseSchema: parsedSchema
       };
+      // --- PERBAIKAN: Hapus tools jika skema ada ---
+      // Gemini tidak mengizinkan 'tools' (grounding) dan 'responseSchema' (JSON) secara bersamaan.
+      delete payload.tools; 
+      // --- AKHIR PERBAIKAN ---
     } catch (e) {
       console.error("Skema JSON tidak valid:", e);
       return res.status(400).json({ error: "Skema JSON tidak valid." });
@@ -158,3 +162,4 @@ app.listen(PORT, () => {
     console.warn("⚠️ PERINGATAN: GEMINI_API_KEY belum diatur. Endpoint /api/gemini-proxy akan gagal.");
   }
 });
+
