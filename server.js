@@ -72,7 +72,7 @@ app.get("/api/:symbol", async (req, res) => {
   
   // HANYA mengembalikan data harga (tanpa AI), ini membuat aplikasi lebih cepat
   // Aplikasi akan memanggil endpoint AI secara terpisah jika perlu.
-  res.json(data); // <-- PERBAIKAN: Ini sebelumnya '_res.json(data)'
+  res.json(data);
 });
 
 // === ENDPOINT BARU (STEP 1): API KURS USD/IDR ===
@@ -120,10 +120,8 @@ app.post("/api/gemini-proxy", async (req, res) => {
         responseMimeType: "application/json",
         responseSchema: parsedSchema
       };
-      // --- PERBAIKAN: Hapus tools jika skema ada ---
       // Gemini tidak mengizinkan 'tools' (grounding) dan 'responseSchema' (JSON) secara bersamaan.
       delete payload.tools; 
-      // --- AKHIR PERBAIKAN ---
     } catch (e) {
       console.error("Skema JSON tidak valid:", e);
       return res.status(400).json({ error: "Skema JSON tidak valid." });
@@ -135,7 +133,7 @@ app.post("/api/gemini-proxy", async (req, res) => {
     const response = await fetch(GEMINI_API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-S     body: JSON.stringify(payload)
+      body: JSON.stringify(payload)
     });
 
     if (!response.ok) {
@@ -150,7 +148,7 @@ S     body: JSON.stringify(payload)
     if (!text) {
       console.error("Respon Gemini tidak valid:", data);
       return res.status(500).json({ error: "Respon tidak valid dari AI." });
-  S }
+    }
 
     // 5. Kembalikan dalam format yang diharapkan aplikasi: { text: "..." }
     res.json({ text: text });
@@ -164,7 +162,7 @@ S     body: JSON.stringify(payload)
 // === KEEP ALIVE (DARI KODE LAMA ANDA) ===
 // Ini penting untuk layanan gratis di Render agar tidak tidur
 setInterval(() => {
-  // PERBAIKAN: Server harus mem-ping URL-nya sendiri (analisahamku-v2)
+  // Server harus mem-ping URL-nya sendiri (analisahamku-v2)
   fetch("https://analisahamku-v2.onrender.com/") 
     .catch(() => console.log("[PING] Render tetap hidup."));
 }, 12 * 60 * 1000); // Setiap 12 menit
