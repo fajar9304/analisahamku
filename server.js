@@ -72,7 +72,7 @@ app.get("/api/:symbol", async (req, res) => {
   
   // HANYA mengembalikan data harga (tanpa AI), ini membuat aplikasi lebih cepat
   // Aplikasi akan memanggil endpoint AI secara terpisah jika perlu.
-_res.json(data);
+  res.json(data); // <-- PERBAIKAN: Ini sebelumnya '_res.json(data)'
 });
 
 // === ENDPOINT 2: PROXY AI GEMINI ===
@@ -162,4 +162,3 @@ app.listen(PORT, () => {
     console.warn("⚠️ PERINGATAN: GEMINI_API_KEY belum diatur. Endpoint /api/gemini-proxy akan gagal.");
   }
 });
-
