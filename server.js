@@ -75,6 +75,21 @@ app.get("/api/:symbol", async (req, res) => {
   res.json(data); // <-- PERBAIKAN: Ini sebelumnya '_res.json(data)'
 });
 
+// === ENDPOINT BARU (STEP 1): API KURS USD/IDR ===
+app.get("/api/rates/usd-idr", async (req, res) => {
+  const ticker = "IDR=X"; // Ticker Yahoo Finance untuk USD ke IDR
+  const data = await getAssetPriceData(ticker);
+  
+  if (!data || !data.regularMarketPrice) {
+    console.error("❌ Gagal mengambil kurs IDR=X dari Yahoo Finance.");
+    return res.status(404).json({ error: "Gagal mengambil data kurs USD/IDR." });
+  }
+  
+  // Kembalikan hanya kursnya dalam format JSON yang sederhana
+  res.json({ rate: data.regularMarketPrice });
+});
+// === AKHIR ENDPOINT BARU ===
+
 // === ENDPOINT 2: PROXY AI GEMINI ===
 // Endpoint ini dicocokkan dengan RENDER_AI_PROXY_URL di aplikasi Anda
 app.post("/api/gemini-proxy", async (req, res) => {
@@ -120,7 +135,7 @@ app.post("/api/gemini-proxy", async (req, res) => {
     const response = await fetch(GEMINI_API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+S     body: JSON.stringify(payload)
     });
 
     if (!response.ok) {
@@ -135,7 +150,7 @@ app.post("/api/gemini-proxy", async (req, res) => {
     if (!text) {
       console.error("Respon Gemini tidak valid:", data);
       return res.status(500).json({ error: "Respon tidak valid dari AI." });
-    }
+  S }
 
     // 5. Kembalikan dalam format yang diharapkan aplikasi: { text: "..." }
     res.json({ text: text });
